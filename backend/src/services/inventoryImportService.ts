@@ -111,6 +111,33 @@ function detectDelimiter(firstLine: string): string {
 }
 
 /**
+ * Decodifica o buffer de um CSV para texto, lidando com as codificações
+ * que aparecem na prática. O Excel em pt-BR salva CSV em Windows-1252
+ * (ANSI) por padrão, não em UTF-8 — então "Periférico" (é = 0xE9) não é
+ * UTF-8 válido e precisa do fallback, senão o acento vira "�".
+ *
+ * Ordem: BOM explícito (UTF-8 / UTF-16) → UTF-8 estrito → Windows-1252.
+ * O TextDecoder remove o BOM sozinho; ignoreBOM fica no padrão (false).
+ */
+function decodeCsv(buffer: Buffer): string {
+  if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
+    return new TextDecoder('utf-8').decode(buffer);
+  }
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
+    return new TextDecoder('utf-16le').decode(buffer);
+  }
+  if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
+    return new TextDecoder('utf-16be').decode(buffer);
+  }
+  // Sem BOM: tenta UTF-8 estrito; se houver byte inválido, cai pra Windows-1252.
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+  } catch {
+    return new TextDecoder('windows-1252').decode(buffer);
+  }
+}
+
+/**
  * Carrega o buffer enviado como um worksheet do ExcelJS, aceitando tanto
  * .xlsx quanto .csv. O tipo é detectado pelo conteúdo (não pela extensão,
  * que não é confiável). Toda a validação a jusante opera sobre o worksheet,
@@ -122,8 +149,8 @@ async function loadInventoryWorksheet(buffer: Buffer): Promise<ExcelJS.Worksheet
   if (isXlsxBuffer(buffer)) {
     await wb.xlsx.load(buffer as unknown as ArrayBuffer);
   } else {
-    // CSV: assume UTF-8; remove BOM que o Excel costuma escrever no início.
-    const text = buffer.toString('utf8').replace(/^﻿/, '');
+    // CSV: decodifica detectando a codificação (UTF-8 / Windows-1252).
+    const text = decodeCsv(buffer);
     const firstLine = text.split(/\r?\n/, 1)[0] ?? '';
     const delimiter = detectDelimiter(firstLine);
     await wb.csv.read(Readable.from(text), {

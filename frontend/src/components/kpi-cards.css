@@ -301,7 +301,7 @@
   background: var(--bg-recess);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  transition: border-color 160ms ease, transform 160ms ease;
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
   min-height: 84px;
 }
 
@@ -309,9 +309,34 @@
   cursor: pointer;
 }
 
+/* Feedback de clique: eleva, projeta sombra e destaca o ícone — deixa
+   claro que o card é acionável. O :active dá o retorno de "pressionado". */
 .icon-kpi--clickable:hover {
-  border-color: color-mix(in srgb, var(--brand-blue) 35%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--brand-blue) 45%, var(--border-subtle));
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.45);
+}
+.icon-kpi--clickable:hover .icon-kpi__icon {
+  transform: scale(1.08);
+}
+.icon-kpi--clickable:active {
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px -8px rgba(0, 0, 0, 0.4);
+}
+.icon-kpi--clickable:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-kpi,
+  .icon-kpi__icon {
+    transition: none;
+  }
+  .icon-kpi--clickable:hover,
+  .icon-kpi--clickable:active {
+    transform: none;
+  }
 }
 
 .icon-kpi__icon {
@@ -322,6 +347,7 @@
   height: 42px;
   border-radius: 10px;
   flex-shrink: 0;
+  transition: transform 160ms ease;
   /* background é aplicado inline com cor + 22 (alpha hex ~13%) */
   /* color é aplicado inline pra herdar nos SVGs */
 }

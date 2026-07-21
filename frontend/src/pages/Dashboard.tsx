@@ -159,6 +159,7 @@ export default function Dashboard({ role, onNavigate }: DashboardProps) {
             peripherals.items.filter((p) => p.available <= LOW_STOCK_THRESHOLD).length
           }
           onNavigatePR={() => onNavigate?.('purchase-requests')}
+          onOpenPeripherals={() => setShowPeripherals(true)}
         />
       )}
       {role === 'LIDER_N1' && (
@@ -291,6 +292,9 @@ interface OperatorSectionProps {
   opMetrics: OperatorMetrics | null;
   peripheralsLowStockCount: number;
   onNavigatePR: () => void;
+  // Abre o painel "Periféricos com estoque baixo" (mesmo modal do card
+  // da linha 2). Só é acionado quando há itens críticos.
+  onOpenPeripherals: () => void;
 }
 
 // ---------------------------------------------------------------------
@@ -356,6 +360,7 @@ function OperatorSection({
   opMetrics,
   peripheralsLowStockCount,
   onNavigatePR,
+  onOpenPeripherals,
 }: OperatorSectionProps) {
   if (!opMetrics) {
     return (
@@ -394,6 +399,11 @@ function OperatorSection({
             peripheralsLowStockCount === 0
               ? 'Nenhum tipo abaixo do limite'
               : `${peripheralsLowStockCount} tipo${peripheralsLowStockCount === 1 ? '' : 's'} de periférico baixo`
+          }
+          // Clicável só quando há itens críticos — abre o painel de
+          // periféricos com estoque baixo (mesmo do card da linha 2).
+          onClick={
+            peripheralsLowStockCount > 0 ? onOpenPeripherals : undefined
           }
         />
         <IconKPI

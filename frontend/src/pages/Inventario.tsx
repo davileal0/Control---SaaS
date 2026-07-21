@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   api,
   InventoryValidation,
@@ -44,6 +44,12 @@ function canSubmit(role: Role | null): boolean {
   return role === 'OPERADOR_N1' || role === 'LIDER_N1';
 }
 
+/** Formatos aceitos na importação (checagem por extensão do nome). */
+function isAcceptedFile(f: File): boolean {
+  const name = f.name.toLowerCase();
+  return name.endsWith('.xlsx') || name.endsWith('.csv');
+}
+
 function fmtDateTime(iso: string | null): string {
   if (!iso) return '—';
   return new Date(iso).toLocaleString('pt-BR', {
@@ -82,6 +88,44 @@ export default function Inventario({ role }: Props) {
   const [validating, setValidating] = useState(false);
   const [autentiqueLink, setAutentiqueLink] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Drag & drop. Um contador de profundidade evita o "flicker" do estado
+  // quando o cursor passa por cima de elementos filhos da dropzone
+  // (cada filho dispara dragenter/dragleave próprios).
+  const [dragActive, setDragActive] = useState(false);
+  const dragDepth = useRef(0);
+
+  function handleDragEnter(e: React.DragEvent) {
+    e.preventDefault();
+    if (!canSubmit(role)) return;
+    dragDepth.current += 1;
+    setDragActive(true);
+  }
+  function handleDragOver(e: React.DragEvent) {
+    // Necessário para que o "drop" seja permitido pelo navegador.
+    e.preventDefault();
+  }
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    dragDepth.current -= 1;
+    if (dragDepth.current <= 0) {
+      dragDepth.current = 0;
+      setDragActive(false);
+    }
+  }
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    dragDepth.current = 0;
+    setDragActive(false);
+    if (!canSubmit(role)) return;
+    const dropped = e.dataTransfer.files?.[0];
+    if (!dropped) return;
+    if (!isAcceptedFile(dropped)) {
+      toast.error('Formato não suportado. Envie um arquivo .xlsx ou .csv.');
+      return;
+    }
+    handleFile(dropped);
+  }
 
   // Aprovação/recusa
   const [resolvingId, setResolvingId] = useState<number | null>(null);
@@ -214,19 +258,32 @@ export default function Inventario({ role }: Props) {
             <h2>Enviar planilha do inventário</h2>
           </header>
 
-          <div className="inv-upload__file">
-            <label className="btn" htmlFor="inv-file">
-              {file ? 'Trocar planilha' : 'Escolher planilha (.xlsx ou .csv)'}
-            </label>
-            <input
-              id="inv-file"
-              type="file"
-              accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-              style={{ display: 'none' }}
-              onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-            />
-            {file && <span className="inv-upload__filename">{file.name}</span>}
-            {validating && <Spinner />}
+          <div
+            className={`inv-dropzone${dragActive ? ' inv-dropzone--active' : ''}`}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <div className="inv-upload__file">
+              <label className="btn" htmlFor="inv-file">
+                {file ? 'Trocar planilha' : 'Escolher planilha (.xlsx ou .csv)'}
+              </label>
+              <input
+                id="inv-file"
+                type="file"
+                accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                style={{ display: 'none' }}
+                onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+              />
+              {file && <span className="inv-upload__filename">{file.name}</span>}
+              {validating && <Spinner />}
+            </div>
+            <p className="inv-dropzone__hint">
+              {dragActive
+                ? 'Solte o arquivo para carregar'
+                : 'ou arraste e solte o arquivo aqui (.xlsx ou .csv)'}
+            </p>
           </div>
 
           {/* Feedback de validação */}

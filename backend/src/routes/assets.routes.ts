@@ -9,9 +9,20 @@ import {
   createAsset,
   createEquipmentsBulkFromRaw,
   listActiveAssets,
+  getPeripheralTypeAvailability,
 } from '../services/assetService';
 
 const router = Router();
+
+// Estoque disponível por tipo de periférico (painel de entrega de kit).
+// Rota estática ANTES de qualquer '/:algo' pra evitar captura indevida.
+router.get('/peripherals/stock', anyAuthenticated, async (_req, res, next) => {
+  try {
+    res.json(await getPeripheralTypeAvailability());
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Listar ativos com filtros (status, categoria, busca textual).
 router.get('/', anyAuthenticated, async (req, res, next) => {

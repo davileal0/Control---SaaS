@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import HelpButton from '../components/HelpButton';
+import { PERIPHERAL_TYPES } from '../lib/peripheralTypes';
 import './peripherals-modal.css'; // reusa .modal-backdrop / .modal / .modal__head
 import './asset-modal.css';
 
@@ -439,9 +440,18 @@ GHI789`}</div>
                     value={peripheralType}
                     onChange={(e) => setPeripheralType(e.target.value)}
                     placeholder="ex.: Mouse, Teclado, Headset"
+                    list="peripheral-types"
                     autoComplete="off"
                     required
                   />
+                  {/* Sugere os tipos canônicos (mesma lista do kit de
+                      atribuição) pra manter o estoque alinhado, sem
+                      travar cadastros de tipos novos. */}
+                  <datalist id="peripheral-types">
+                    {PERIPHERAL_TYPES.map((t) => (
+                      <option key={t} value={t} />
+                    ))}
+                  </datalist>
                 </label>
 
                 <label className="form-field">

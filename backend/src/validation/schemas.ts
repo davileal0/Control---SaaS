@@ -84,6 +84,14 @@ export const createAssetSchema = z
     }
   });
 
+// Kit de periféricos entregue junto de uma atribuição. Cada item é um
+// tipo (== Asset.model de um periférico) + quantidade. Consolidado e
+// debitado do estoque na mesma transação da movimentação.
+export const peripheralDeliveryItemSchema = z.object({
+  type: z.string().trim().min(1, 'Tipo do periférico obrigatório.').max(120),
+  quantity: z.number().int().positive().max(999),
+});
+
 export const transitionSchema = z
   .object({
     destinationStatus: statusSchema,
@@ -97,6 +105,8 @@ export const transitionSchema = z
     // Motivo da atribuição: obrigatório QUANDO destinationStatus = EmUso.
     // Validado via refine abaixo. Pra outras transições é ignorado.
     assignmentReason: z.enum(['AUMENTO_QUADRO', 'SUBSTITUICAO']).optional(),
+    // Periféricos entregues junto (opcional). Só faz sentido em EmUso.
+    peripherals: z.array(peripheralDeliveryItemSchema).max(50).optional(),
   })
   .refine(
     (data) =>
@@ -181,6 +191,8 @@ export const reassignSchema = z.object({
     message: 'Motivo da atribuição obrigatório (Aumento de quadro ou Substituição).',
   }),
   notes: z.string().trim().max(2000).optional(),
+  // Periféricos entregues junto do reaproveitamento (opcional).
+  peripherals: z.array(peripheralDeliveryItemSchema).max(50).optional(),
 });
 
 // Filtros aceitos na listagem de ativos. Todos opcionais.

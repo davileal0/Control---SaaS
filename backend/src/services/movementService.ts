@@ -1,5 +1,5 @@
 import { prisma } from '../db/prisma';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { assertTransition } from '../domain/assetStateMachine';
 import { AssetStatus } from '../domain/types';
 import {
@@ -23,6 +23,114 @@ const EDITABLE_FIELDS = [
 
 function httpError(message: string, statusCode: number) {
   return Object.assign(new Error(message), { statusCode });
+}
+
+type PeripheralDelivery = { type: string; quantity: number };
+
+// Type alias pro callback de $transaction (5.x não expõe TransactionClient
+// diretamente; mesmo padrão do assetService).
+type Tx = Omit<
+  PrismaClient,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
+
+/**
+ * Dá baixa nos periféricos entregues junto de uma atribuição, DENTRO da
+ * mesma transação da movimentação principal. Para cada tipo pedido, move
+ * `quantity` unidades disponíveis daquele tipo (== Asset.model) para
+ * EmUso e grava um log de consumo por unidade (mantém o "consumo 30d"
+ * das projeções coerente).
+ *
+ * Bloqueia (409) se o estoque for insuficiente — a transação inteira é
+ * revertida, então nada é debitado pela metade.
+ *
+ * Retorna o resumo consolidado (tipo + quantidade) para compor a
+ * observação do lançamento pai e dar rastreabilidade ao kit.
+ */
+async function deliverPeripherals(
+  tx: Tx,
+  items: PeripheralDelivery[],
+  ctx: {
+    parentSerial: string;
+    endUserName?: string;
+    managerName?: string;
+    department?: string;
+    ticketId?: string;
+    actor: AuthUser;
+  },
+): Promise<PeripheralDelivery[]> {
+  // Consolida duplicatas (ex: dois itens "Mouse" no payload viram um só).
+  const consolidated = new Map<string, number>();
+  for (const it of items) {
+    consolidated.set(it.type, (consolidated.get(it.type) ?? 0) + it.quantity);
+  }
+
+  const summary: PeripheralDelivery[] = [];
+
+  for (const [type, quantity] of consolidated) {
+    // Pega até `quantity` unidades disponíveis desse tipo (FIFO por criação).
+    const units = await tx.asset.findMany({
+      where: {
+        category: 'Periferico',
+        model: type,
+        status: 'Disponivel',
+        isArchived: false,
+      },
+      select: { serialNumber: true },
+      orderBy: { createdAt: 'asc' },
+      take: quantity,
+    });
+
+    if (units.length < quantity) {
+      throw httpError(
+        `Estoque insuficiente de "${type}": ${units.length} disponível(is) ` +
+          `para ${quantity} solicitado(s). Reponha o estoque antes de entregar.`,
+        409,
+      );
+    }
+
+    for (const unit of units) {
+      await tx.asset.update({
+        where: { serialNumber: unit.serialNumber },
+        data: { status: 'EmUso' },
+      });
+      await tx.movementLog.create({
+        data: {
+          assetSerialNumber: unit.serialNumber,
+          originStatus: 'Disponivel',
+          destinationStatus: 'EmUso',
+          ticketId: ctx.ticketId,
+          endUserName: ctx.endUserName,
+          managerName: ctx.managerName,
+          department: ctx.department,
+          notes:
+            `[KIT] Entregue junto de ${ctx.parentSerial}` +
+            (ctx.endUserName ? ` para ${ctx.endUserName}` : ''),
+          actorUserId: ctx.actor.id,
+          actorName: ctx.actor.name,
+          actorRole: ctx.actor.role,
+        },
+      });
+    }
+
+    summary.push({ type, quantity });
+  }
+
+  return summary;
+}
+
+/** Monta o texto do kit para anexar à observação do lançamento pai. */
+function formatKitSummary(summary: PeripheralDelivery[]): string {
+  return (
+    'Periféricos entregues: ' +
+    summary.map((s) => `${s.quantity}x ${s.type}`).join(', ')
+  );
+}
+
+/** Junta observação do usuário + resumo do kit numa string só (ou undefined). */
+function combineNotes(userNotes?: string, kitSummary?: string): string | undefined {
+  const parts = [userNotes?.trim(), kitSummary].filter(Boolean) as string[];
+  return parts.length ? parts.join('\n\n') : undefined;
 }
 
 /**
@@ -52,6 +160,21 @@ export async function registerMovement(
 
     await tx.asset.update({ where: { serialNumber: serial }, data: { status: to } });
 
+    // Kit de periféricos: só em atribuição (EmUso). Debita o estoque na
+    // mesma transação — se faltar, tudo é revertido (incluindo o status).
+    let kitSummary: string | undefined;
+    if (to === 'EmUso' && input.peripherals && input.peripherals.length > 0) {
+      const summary = await deliverPeripherals(tx, input.peripherals, {
+        parentSerial: serial,
+        endUserName: input.endUserName,
+        managerName: input.managerName,
+        department: input.department,
+        ticketId: input.ticketId,
+        actor,
+      });
+      kitSummary = formatKitSummary(summary);
+    }
+
     return tx.movementLog.create({
       data: {
         assetSerialNumber: serial,
@@ -63,7 +186,7 @@ export async function registerMovement(
         department: input.department,
         invoiceNumber: input.invoiceNumber,
         trackingCode: input.trackingCode,
-        notes: input.notes,
+        notes: combineNotes(input.notes, kitSummary),
         // Só persiste se for transição pra EmUso (validado no Zod;
         // garantia extra aqui pra não poluir outros logs).
         assignmentReason: to === 'EmUso' ? input.assignmentReason : null,
@@ -295,6 +418,21 @@ export async function reassignAsset(
       },
     });
 
+    // Kit de periféricos entregue com o reaproveitamento (opcional).
+    // Debitado na mesma transação — bloqueia e reverte se faltar estoque.
+    let kitSummary: string | undefined;
+    if (input.peripherals && input.peripherals.length > 0) {
+      const summary = await deliverPeripherals(tx, input.peripherals, {
+        parentSerial: serial,
+        endUserName: input.endUserName,
+        managerName: input.managerName,
+        department: input.department,
+        ticketId: input.newTicketId,
+        actor,
+      });
+      kitSummary = formatKitSummary(summary);
+    }
+
     // Log 2: nova atribuição. Mesmo ativo, novo colaborador.
     const newAssignmentLog = await tx.movementLog.create({
       data: {
@@ -307,9 +445,11 @@ export async function reassignAsset(
         department: input.department,
         // Só a nova atribuição carrega o motivo; a devolução não.
         assignmentReason: input.assignmentReason,
-        notes:
+        notes: combineNotes(
           `[REUTILIZAÇÃO] Reaproveitamento da máquina anteriormente em uso ` +
-          `por ${previousUserLabel}${extraNotes}`,
+            `por ${previousUserLabel}${extraNotes}`,
+          kitSummary,
+        ),
         actorUserId: actor.id,
         actorName: actor.name,
         actorRole: actor.role,

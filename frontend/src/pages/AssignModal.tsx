@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, FormEvent } from 'react';
-import { api, AuditResult } from '../lib/api';
+import { api, AuditResult, PeripheralTypeStock } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { STATUS_LABEL, AssignmentReason } from '../types/domain';
+import PeripheralDeliveryPicker from './PeripheralDeliveryPicker';
 import './peripherals-modal.css';
 import './audit.css'; // pill styles
 import './asset-modal.css';
@@ -35,6 +36,13 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
   const [error, setError] = useState<string | null>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
+  // Entrega de periféricos junto (só faz sentido pra ativo rastreável).
+  const canDeliverPeripherals = asset.category !== 'Periferico';
+  const [deliverOn, setDeliverOn] = useState(false);
+  const [deliveries, setDeliveries] = useState<Record<string, number>>({});
+  const [stock, setStock] = useState<PeripheralTypeStock[]>([]);
+  const [loadingStock, setLoadingStock] = useState(false);
+
   useEffect(() => {
     firstFieldRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
@@ -43,6 +51,17 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, submitting]);
+
+  // Carrega o estoque por tipo ao abrir (só se for ativo rastreável).
+  useEffect(() => {
+    if (!canDeliverPeripherals) return;
+    setLoadingStock(true);
+    api
+      .peripheralTypeStock()
+      .then(setStock)
+      .catch(() => {})
+      .finally(() => setLoadingStock(false));
+  }, [canDeliverPeripherals]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -61,6 +80,27 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
       return;
     }
 
+    // Monta o kit de periféricos (se ativado). A quantidade já vem
+    // limitada ao estoque pelo picker; revalidamos por segurança.
+    let peripherals: { type: string; quantity: number }[] | undefined;
+    if (deliverOn) {
+      const items = Object.entries(deliveries).map(([type, quantity]) => ({
+        type,
+        quantity,
+      }));
+      const over = items.find((it) => {
+        const avail = stock.find((s) => s.type === it.type)?.available ?? 0;
+        return it.quantity > avail;
+      });
+      if (over) {
+        setError(
+          `Estoque insuficiente de "${over.type}". Reponha antes de entregar.`,
+        );
+        return;
+      }
+      peripherals = items.length > 0 ? items : undefined;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
@@ -72,6 +112,7 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
         department: dept,
         assignmentReason,
         notes: notes.trim() || undefined,
+        peripherals,
       });
       toast.success(`Atribuído a ${user}`);
       onConfirmed();
@@ -199,6 +240,28 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
               rows={3}
             />
           </label>
+
+          {/* Entrega de periféricos junto (só pra ativo rastreável) */}
+          {canDeliverPeripherals && (
+            <div className="periph-deliver">
+              <label className="periph-deliver__toggle">
+                <input
+                  type="checkbox"
+                  checked={deliverOn}
+                  onChange={(e) => setDeliverOn(e.target.checked)}
+                />
+                <span>Entregar periféricos junto</span>
+              </label>
+              {deliverOn && (
+                <PeripheralDeliveryPicker
+                  stock={stock}
+                  value={deliveries}
+                  onChange={setDeliveries}
+                  loading={loadingStock}
+                />
+              )}
+            </div>
+          )}
 
           {error && <p className="form-error">{error}</p>}
 

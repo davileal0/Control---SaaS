@@ -114,6 +114,18 @@ export interface DiscardInput {
 
 // Input para reaproveitamento direto: chamado opcional da devolução do
 // anterior + campos obrigatórios da nova atribuição (Fluxo A normal).
+// Item de kit de periférico entregue junto de uma atribuição.
+export interface PeripheralDelivery {
+  type: string;
+  quantity: number;
+}
+
+// Estoque disponível por tipo de periférico (painel de entrega).
+export interface PeripheralTypeStock {
+  type: string;
+  available: number;
+}
+
 export interface ReassignInput {
   returnTicketId?: string;
   newTicketId: string;
@@ -123,6 +135,8 @@ export interface ReassignInput {
   /** Motivo da nova atribuição — obrigatório */
   assignmentReason: 'AUMENTO_QUADRO' | 'SUBSTITUICAO';
   notes?: string;
+  /** Periféricos entregues junto (opcional) */
+  peripherals?: PeripheralDelivery[];
 }
 
 // Diff de campos editáveis. Cada chave é opcional — só envia o que mudou.
@@ -216,6 +230,8 @@ export interface RegisterMovementInput {
   /** Motivo da atribuição — obrigatório quando destinationStatus === 'EmUso' */
   assignmentReason?: 'AUMENTO_QUADRO' | 'SUBSTITUICAO';
   notes?: string;
+  /** Periféricos entregues junto (só em atribuição, EmUso) */
+  peripherals?: PeripheralDelivery[];
 }
 
 // ===== Painel de Atividade dos Operadores =====
@@ -293,6 +309,8 @@ export const api = {
       `/assets/${encodeURIComponent(serial)}/reassign`,
       { method: 'POST', body: JSON.stringify(input) },
     ),
+  peripheralTypeStock: () =>
+    request<PeripheralTypeStock[]>('/assets/peripherals/stock'),
   editMovement: (logId: number, input: EditLogInput) =>
     request<MovementLog>(
       `/assets/movements/${logId}`,

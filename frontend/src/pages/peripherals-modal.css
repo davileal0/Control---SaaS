@@ -80,3 +80,80 @@
   background: linear-gradient(90deg, #5b6472, var(--led));
 }
 .periph-row__count { text-align: right; color: var(--text-primary); }
+
+/* ===== Entrega de periféricos no kit de atribuição ===== */
+.periph-deliver {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-recess);
+}
+
+.periph-deliver__toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.periph-deliver__toggle input { width: 16px; height: 16px; cursor: pointer; }
+
+.periph-pick {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.periph-pick__loading { color: var(--text-secondary); font-size: 13px; margin: 0; }
+
+.periph-pick__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 8px;
+  border-radius: 8px;
+}
+.periph-pick__row.is-selected { background: var(--surface-2); }
+.periph-pick__row.is-empty { opacity: 0.55; }
+
+.periph-pick__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  min-width: 0;
+}
+.periph-pick__row.is-empty .periph-pick__check { cursor: not-allowed; }
+.periph-pick__check input { width: 15px; height: 15px; flex-shrink: 0; }
+.periph-pick__name { font-size: 14px; color: var(--text-primary); }
+
+.periph-pick__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.periph-pick__qty {
+  width: 64px;
+  padding: 5px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--bg-recess);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  text-align: center;
+}
+.periph-pick__avail { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.periph-pick__repor {
+  font-size: 12px;
+  color: var(--led);
+  white-space: nowrap;
+}

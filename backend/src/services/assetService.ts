@@ -6,6 +6,7 @@ import { autoCloseIfStockNormalized } from './purchaseRequestService';
 import { parseSerials } from './serialParser';
 import { AuthUser } from '../middleware/auth';
 import { actorFields } from './logActor';
+import { PERIPHERAL_TYPES } from './peripheralTypes';
 
 // Type alias pro callback de $transaction (5.x não expõe TransactionClient
 // diretamente; isso funciona em todas as versões).
@@ -369,4 +370,34 @@ export async function listActiveAssets(filters: ListFiltersInput = {}) {
       },
     },
   });
+}
+
+/**
+ * Estoque disponível por TIPO canônico de periférico. Usado pelo painel
+ * de entrega de kit (atribuição/reaproveitamento) pra mostrar quanto há
+ * de cada tipo e impedir entregar mais do que existe.
+ *
+ * Retorna sempre a lista canônica completa (tipos sem estoque vêm com 0),
+ * pra a UI exibir todos os itens padrão e sugerir reposição nos zerados.
+ */
+export async function getPeripheralTypeAvailability(): Promise<
+  { type: string; available: number }[]
+> {
+  const grouped = await prisma.asset.groupBy({
+    by: ['model'],
+    where: { category: 'Periferico', status: 'Disponivel', isArchived: false },
+    _count: { _all: true },
+  });
+
+  const byModel = new Map(
+    grouped.map((g: { model: string; _count: { _all: number } }) => [
+      g.model,
+      g._count._all,
+    ]),
+  );
+
+  return PERIPHERAL_TYPES.map((type) => ({
+    type,
+    available: byModel.get(type) ?? 0,
+  }));
 }

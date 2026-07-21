@@ -483,12 +483,16 @@ export function HeroCard({
               <li key={a.model} className="hero-action">
                 <span className="hero-action__pulse" aria-hidden="true" />
                 <span className="hero-action__label">
-                  <strong>{a.model}</strong> · {a.currentStock} unid
+                  {/* Instrução acionável: verbo + o que fazer + o porquê.
+                      Ex: "Repor Mouse USB Dell — estoque baixo". Quando há
+                      consumo, acrescenta a projeção de esgotamento. */}
+                  <strong>Repor {a.model}</strong> —{' '}
+                  {a.daysRemaining !== null
+                    ? `estoque baixo · esgota em ~${a.daysRemaining}d`
+                    : 'estoque baixo'}
                 </span>
                 <span className="hero-action__hint">
-                  {a.daysRemaining !== null
-                    ? `esgota em ~${a.daysRemaining}d`
-                    : 'sem consumo recente'}
+                  {a.currentStock} {a.currentStock === 1 ? 'unidade' : 'unidades'}
                 </span>
               </li>
             ))}

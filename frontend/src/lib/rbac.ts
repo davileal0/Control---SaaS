@@ -57,7 +57,7 @@ export const NAV_ITEMS: NavItem[] = [
   // Gerencial: Líder e Coordenador (mesma faixa dos relatórios de leitura).
   { key: 'activity', label: 'Atividade', group: 'analysis', hint: 'Painel de atividade dos operadores', roles: ['LIDER_N1', 'DIRETOR_TI'] },
   { key: 'discarded', label: 'Descartados', group: 'analysis', hint: 'Equipamentos descartados e seus registros', roles: ['LIDER_N1', 'DIRETOR_TI'] },
-  { key: 'reports', label: 'Relatórios', group: 'analysis', hint: 'Correções e descartes para exportação', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
+  { key: 'reports', label: 'Relatórios', group: 'analysis', hint: 'Correções e descartes para exportação', roles: ['LIDER_N1', 'DIRETOR_TI'] },
   // Configurações (inclui gestão de acessos) — Líder e Coordenador.
   { key: 'settings', label: 'Configurações', group: 'system', hint: 'Gestão de acessos e preferências', roles: ['LIDER_N1', 'DIRETOR_TI'] },
 ];

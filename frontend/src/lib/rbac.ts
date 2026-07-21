@@ -19,32 +19,61 @@ export function canManageUsers(role: Role): boolean {
   return role === 'LIDER_N1' || role === 'DIRETOR_TI';
 }
 
+// Grupos da navegação. Dão contexto e hierarquia à barra lateral, no
+// lugar de uma lista plana. A ordem aqui é a ordem de exibição.
+export type NavGroupId = 'overview' | 'operation' | 'analysis' | 'system';
+
+export interface NavGroup {
+  id: NavGroupId;
+  label: string;
+}
+
+export const NAV_GROUPS: NavGroup[] = [
+  { id: 'overview', label: 'Visão geral' },
+  { id: 'operation', label: 'Operação' },
+  { id: 'analysis', label: 'Análise' },
+  { id: 'system', label: 'Sistema' },
+];
+
 export interface NavItem {
   key: string;
   label: string;
   roles: Role[];
+  group: NavGroupId;
+  // Frase curta usada como tooltip: contextualiza o que a página faz.
+  hint: string;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { key: 'dashboard', label: 'Dashboard', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
-  { key: 'assets', label: 'Ativos', roles: ['OPERADOR_N1', 'LIDER_N1'] },
-  { key: 'audit', label: 'Auditoria', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
-  { key: 'discarded', label: 'Descartados', roles: ['LIDER_N1', 'DIRETOR_TI'] },
-  // Painel de atividade dos operadores — apoio a feedback individual.
-  // Gerencial: Líder e Coordenador (mesma faixa dos relatórios de leitura).
-  { key: 'activity', label: 'Atividade', roles: ['LIDER_N1', 'DIRETOR_TI'] },
-   // Importação de inventário: operador sobe planilha, gestor aprova.
-  { key: 'inventory', label: 'Inventário', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
+  { key: 'dashboard', label: 'Dashboard', group: 'overview', hint: 'Visão geral e indicadores do parque de ativos', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
+  { key: 'assets', label: 'Ativos', group: 'operation', hint: 'Cadastrar, movimentar e descartar equipamentos', roles: ['OPERADOR_N1', 'LIDER_N1'] },
+  // Importação de inventário: operador sobe planilha, gestor aprova.
+  { key: 'inventory', label: 'Inventário', group: 'operation', hint: 'Importar planilha do inventário oficial de TI', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
   // Visível pra TODOS — transparência operacional. Evita o "já abriram SC?"
   // no Teams: o operador N1 vê o status mesmo sem poder autorizar.
-  { key: 'purchase-requests', label: 'Solicitações', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
-  { key: 'reports', label: 'Relatórios', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
+  { key: 'purchase-requests', label: 'Solicitações', group: 'operation', hint: 'Solicitações de compra e seu andamento', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
+  { key: 'audit', label: 'Auditoria', group: 'analysis', hint: 'Trilha de movimentações e correções por ativo', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
+  // Painel de atividade dos operadores — apoio a feedback individual.
+  // Gerencial: Líder e Coordenador (mesma faixa dos relatórios de leitura).
+  { key: 'activity', label: 'Atividade', group: 'analysis', hint: 'Painel de atividade dos operadores', roles: ['LIDER_N1', 'DIRETOR_TI'] },
+  { key: 'discarded', label: 'Descartados', group: 'analysis', hint: 'Equipamentos descartados e seus registros', roles: ['LIDER_N1', 'DIRETOR_TI'] },
+  { key: 'reports', label: 'Relatórios', group: 'analysis', hint: 'Correções e descartes para exportação', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
   // Configurações (inclui gestão de acessos) — Líder e Coordenador.
-  { key: 'settings', label: 'Configurações', roles: ['LIDER_N1', 'DIRETOR_TI'] },
+  { key: 'settings', label: 'Configurações', group: 'system', hint: 'Gestão de acessos e preferências', roles: ['LIDER_N1', 'DIRETOR_TI'] },
 ];
 
 export function visibleNav(role: Role): NavItem[] {
   return NAV_ITEMS.filter((i) => i.roles.includes(role));
+}
+
+// Agrupa os itens visíveis por grupo, preservando a ordem de NAV_GROUPS
+// e omitindo grupos que ficaram sem itens para o papel atual.
+export function groupedNav(role: Role): { group: NavGroup; items: NavItem[] }[] {
+  const visible = visibleNav(role);
+  return NAV_GROUPS.map((group) => ({
+    group,
+    items: visible.filter((i) => i.group === group.id),
+  })).filter((g) => g.items.length > 0);
 }
 
 // =====================================================================

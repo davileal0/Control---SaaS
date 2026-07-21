@@ -65,13 +65,30 @@
     0 16px 24px -6px rgba(20, 40, 80, 0.28);
 }
 
-.sidebar__nav { display: flex; flex-direction: column; gap: 10px; }
+/* Nav agrupada: as seções são separadas por um respiro maior; dentro de
+   cada seção os itens ficam próximos. Isso dá hierarquia à barra em vez
+   de uma lista plana. */
+.sidebar__nav { display: flex; flex-direction: column; gap: 20px; }
+
+.nav-group { display: flex; flex-direction: column; gap: 3px; }
+
+/* Rótulo da seção (Visão geral, Operação, Análise, Sistema). Discreto:
+   caixa alta, pequeno e suave — orienta sem competir com os itens. */
+.nav-group__label {
+  margin: 0 0 4px;
+  padding: 0 16px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 
 .nav-item {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   width: 100%;
   text-align: left;
   font: inherit;
@@ -81,12 +98,22 @@
   background: transparent;
   border: none;
   border-radius: var(--r-sm);
-  padding: 13px 16px;
+  padding: 10px 16px;
   cursor: pointer;
   transition: color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .nav-item:hover { color: var(--text-primary); }
+
+/* Ícone do item: tamanho fixo, herda a cor (stroke = currentColor), então
+   acompanha os estados hover/ativo automaticamente. */
+.nav-item__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.nav-item__label { min-width: 0; }
 
 .nav-item__rail {
   width: 4px;

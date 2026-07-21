@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import { Readable } from 'node:stream';
 import { prisma } from '../db/prisma';
 import { AuthUser } from '../middleware/auth';
 
@@ -91,28 +92,78 @@ function mapHeader(headerRow: ExcelJS.Row): Record<string, number> {
   return map;
 }
 
+/** Um arquivo .xlsx é um ZIP: começa com a assinatura "PK" (0x50 0x4B). */
+function isXlsxBuffer(buffer: Buffer): boolean {
+  return buffer.length >= 2 && buffer[0] === 0x50 && buffer[1] === 0x4b;
+}
+
 /**
- * Parseia e valida a planilha. Recebe o buffer do arquivo enviado.
- * Retorna a lista de erros (se houver) ou os ativos prontos (se válido).
+ * Detecta o separador de um CSV a partir da 1ª linha. Aceita ";", ","
+ * e tab — CSVs gerados pelo Excel em pt-BR costumam usar ";".
+ */
+function detectDelimiter(firstLine: string): string {
+  const counts: Record<string, number> = {
+    ';': (firstLine.match(/;/g) ?? []).length,
+    ',': (firstLine.match(/,/g) ?? []).length,
+    '\t': (firstLine.match(/\t/g) ?? []).length,
+  };
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+/**
+ * Carrega o buffer enviado como um worksheet do ExcelJS, aceitando tanto
+ * .xlsx quanto .csv. O tipo é detectado pelo conteúdo (não pela extensão,
+ * que não é confiável). Toda a validação a jusante opera sobre o worksheet,
+ * então o resto do fluxo não muda entre os dois formatos.
+ */
+async function loadInventoryWorksheet(buffer: Buffer): Promise<ExcelJS.Worksheet> {
+  const wb = new ExcelJS.Workbook();
+
+  if (isXlsxBuffer(buffer)) {
+    await wb.xlsx.load(buffer as unknown as ArrayBuffer);
+  } else {
+    // CSV: assume UTF-8; remove BOM que o Excel costuma escrever no início.
+    const text = buffer.toString('utf8').replace(/^﻿/, '');
+    const firstLine = text.split(/\r?\n/, 1)[0] ?? '';
+    const delimiter = detectDelimiter(firstLine);
+    await wb.csv.read(Readable.from(text), {
+      parserOptions: { delimiter },
+      // Mantém cada célula como string crua: evita que SN/IMEI numéricos
+      // percam zeros à esquerda ou virem número, e que datas sejam reparseadas.
+      map: (datum: string) => datum,
+    });
+  }
+
+  return wb.worksheets[0];
+}
+
+/**
+ * Parseia e valida a planilha. Recebe o buffer do arquivo enviado (.xlsx
+ * ou .csv). Retorna a lista de erros (se houver) ou os ativos prontos (se
+ * válido).
  */
 export async function parseAndValidateInventory(
   buffer: Buffer,
 ): Promise<ValidationResult> {
   const errors: RowError[] = [];
-  const wb = new ExcelJS.Workbook();
 
+  let ws: ExcelJS.Worksheet | undefined;
   try {
-    await wb.xlsx.load(buffer as unknown as ArrayBuffer);
+    ws = await loadInventoryWorksheet(buffer);
   } catch {
     return {
       valid: false,
-      errors: [{ row: 0, message: 'Arquivo inválido ou corrompido. Envie um .xlsx válido.' }],
+      errors: [
+        {
+          row: 0,
+          message: 'Arquivo inválido ou corrompido. Envie um .xlsx ou .csv válido.',
+        },
+      ],
       assets: [],
       summary: { totalRows: 0, totalAssets: 0, byCategory: {} },
     };
   }
 
-  const ws = wb.worksheets[0];
   if (!ws || ws.rowCount < 2) {
     return {
       valid: false,

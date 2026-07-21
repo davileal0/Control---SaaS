@@ -216,12 +216,12 @@ export default function Inventario({ role }: Props) {
 
           <div className="inv-upload__file">
             <label className="btn" htmlFor="inv-file">
-              {file ? 'Trocar planilha' : 'Escolher planilha (.xlsx)'}
+              {file ? 'Trocar planilha' : 'Escolher planilha (.xlsx ou .csv)'}
             </label>
             <input
               id="inv-file"
               type="file"
-              accept=".xlsx"
+              accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               style={{ display: 'none' }}
               onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
             />

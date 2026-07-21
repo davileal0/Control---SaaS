@@ -1,0 +1,57 @@
+.stat-card { display: flex; flex-direction: column; gap: 14px; }
+
+/* Header da plataforma: linha horizontal com elementos de navegação
+   global. role-switch fica à esquerda (dev-only), ThemeToggle SEMPRE
+   à direita. Em produção, o role-switch some mas o toggle permanece
+   no canto superior direito — padrão MacOS/Notion/Linear. */
+.content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.role-switch {
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* Agrupa engrenagem + theme-toggle no canto direito do header */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.role-switch .eyebrow { margin-right: 4px; }
+.role-chip {
+  font: inherit; font-size: 12px; letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+  background: transparent; border: 1px solid var(--glass-border);
+  border-radius: 999px; padding: 7px 14px; cursor: pointer;
+  transition: color 0.15s ease, box-shadow 0.15s ease;
+}
+.role-chip:hover { color: var(--text-secondary); }
+.role-chip--on {
+  color: var(--text-satin);
+  box-shadow: var(--extrude-sm);
+  background: var(--surface);
+}
+.role-chip:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    /* No mobile o layout empilha (sidebar em cima, conteúdo embaixo).
+       Solta a altura travada: a PÁGINA inteira rola normalmente, como
+       esperado em tela estreita. O esquema de "só o conteúdo rola" é
+       só pro desktop de duas colunas. */
+    height: auto;
+    overflow: visible;
+  }
+  .content {
+    padding: 28px 22px;
+    height: auto;
+    overflow-y: visible;
+  }
+  .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr; }
+}

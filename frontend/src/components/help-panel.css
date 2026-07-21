@@ -1,0 +1,197 @@
+/* =====================================================================
+   Ajuda contextual — botão "?" e painel lateral
+   =====================================================================
+   Animação SOMENTE por opacidade (sem translate/zoom) — sensibilidade
+   vestibular. Respeita prefers-reduced-motion no fim do arquivo. */
+
+/* Botão "?" — discreto, ao lado de títulos/seções */
+.help-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex: none;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+.help-trigger:hover {
+  color: var(--brand-blue);
+  border-color: var(--brand-blue);
+  background: var(--bg-recess);
+}
+.help-trigger:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+}
+
+/* Overlay que cobre a tela quando o painel abre. Sem escurecer demais
+   (o painel é que tem foco); fade só por opacidade. */
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80; /* acima dos modais (50/60) */
+  background: var(--modal-backdrop-bg);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+  display: flex;
+  justify-content: flex-end;
+  animation: help-fade 160ms ease;
+}
+
+/* Painel ancorado à direita, altura cheia. Sem deslize: aparece por
+   opacidade (o flex-end só o posiciona, não anima posição). */
+.help-panel {
+  width: min(420px, 100%);
+  height: 100%;
+  background: var(--glass-modal);
+  border-left: 1px solid var(--glass-modal-border);
+  backdrop-filter: blur(var(--modal-blur));
+  -webkit-backdrop-filter: blur(var(--modal-blur));
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--modal-shadow);
+  animation: help-fade 180ms ease;
+}
+
+.help-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.help-panel__head h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.help-panel__close {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.help-panel__close:hover {
+  background: var(--bg-recess);
+  color: var(--text-primary);
+}
+
+.help-panel__body {
+  padding: 20px 24px 28px;
+  overflow-y: auto;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Tipografia do conteúdo de ajuda */
+.help-panel__body h4 {
+  margin: 20px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-blue);
+}
+/* No tema escuro, o --brand-blue (#0a3d8f, azul-marinho) fica de baixo
+   contraste sobre o fundo escuro do painel — difícil de ler. Troca por
+   um azul claro e forte (clareamento do azul da marca), com contraste
+   bem acima do mínimo WCAG. Só no dark; o claro mantém o marinho. */
+:root[data-theme='dark'] .help-panel__body h4 {
+  color: #6ba5f7;
+}
+.help-panel__body h4:first-child {
+  margin-top: 0;
+}
+.help-panel__body p {
+  margin: 0 0 12px;
+}
+.help-panel__body ol,
+.help-panel__body ul {
+  margin: 0 0 14px;
+  padding-left: 20px;
+}
+.help-panel__body li {
+  margin-bottom: 7px;
+}
+.help-panel__body code {
+  background: var(--bg-recess);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+.help-panel__body strong {
+  color: var(--text-primary);
+}
+
+/* Caixa de exemplo (ex.: como a lista deve parecer) */
+.help-example {
+  background: var(--bg-recess);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+@keyframes help-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-overlay,
+  .help-panel {
+    animation: none;
+  }
+}
+
+/* Label que tem um botão "?" ao lado: alinha texto + botão na mesma
+   linha, botão à direita. Usado quando a ajuda fica junto de um campo. */
+.form-label--with-help {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+/* O "?" ao lado de label é menor que o standalone (cabe na linha do label) */
+.form-label--with-help .help-trigger {
+  width: 22px;
+  height: 22px;
+}
+.form-label--with-help .help-trigger svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Título do modal + "?" de ajuda lado a lado (ajuda do modal inteiro,
+   posicionada no header ao lado do título). */
+.modal__head-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

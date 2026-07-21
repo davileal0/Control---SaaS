@@ -1,0 +1,186 @@
+/* =====================================================================
+   Hub de Relatórios — grid de cards
+   ===================================================================== */
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 22px;
+  margin-top: 18px;
+}
+
+.report-card {
+  background: var(--bg-recess);
+  box-shadow: var(--pressed);
+  border-radius: var(--r-md);
+  padding: 24px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 280px;
+}
+
+.report-card--placeholder {
+  opacity: 0.5;
+}
+
+.report-card__head h2 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-primary);
+}
+
+.report-card__desc {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.report-card__features {
+  margin: 4px 0 0;
+  padding: 0 0 0 18px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+.report-card__features li {
+  margin-bottom: 3px;
+}
+
+.report-card__btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+/* =====================================================================
+   Modal de geração — pills selecionáveis pra categoria, preset, formato
+   ===================================================================== */
+
+.report-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-recess);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.report-pill input[type='radio'] {
+  display: none;
+}
+.report-pill:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.report-pill--active {
+  border-color: var(--led);
+  color: var(--led);
+  background: rgba(181, 48, 47, 0.06);
+}
+
+/* Aviso de contexto pro Operador N1 */
+.report-note {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  background: rgba(216, 177, 90, 0.06);
+  border: 1px solid rgba(216, 177, 90, 0.22);
+  border-left-width: 3px;
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.report-note strong {
+  color: #d8b15a;
+  font-weight: 600;
+}
+
+/* =====================================================================
+   Modal de Defesa de Compra (multi-categoria)
+   ===================================================================== */
+
+/* Modal um pouco mais largo — comporta os campos por categoria */
+/* Modal um pouco mais largo que o de cadastro (480px) — comporta os
+   campos por categoria lado a lado. Seletor combinado (.modal.defense-modal)
+   tem especificidade maior que .asset-modal, então a largura vence sem
+   depender da ordem de carregamento dos CSS (mais robusto). */
+.modal.defense-modal {
+  width: min(680px, 100%);
+  max-width: 680px;
+}
+
+/* Lista de categorias com checkbox */
+.defense-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.defense-cat {
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 140ms ease;
+}
+.defense-cat--open {
+  border-color: color-mix(in srgb, var(--brand-blue) 40%, transparent);
+}
+
+.defense-cat__toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  user-select: none;
+}
+.defense-cat__toggle input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.defense-cat__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 14px 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Acessórios em linha (nome + qtd + obs + remover) */
+.defense-accessory {
+  display: grid;
+  grid-template-columns: 1fr 80px 1.2fr auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+.defense-accessory__remove {
+  padding: 8px 10px;
+  height: fit-content;
+  color: var(--led);
+}
+
+.defense-add-btn {
+  width: 100%;
+  margin-top: 4px;
+  border-style: dashed;
+}

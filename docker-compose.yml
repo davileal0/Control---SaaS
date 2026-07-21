@@ -1,0 +1,21 @@
+# Postgres local para desenvolvimento da plataforma Control.
+# Em produção, use um Postgres gerenciado com backups e TLS.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: control_app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-troque_esta_senha}
+      POSTGRES_DB: control
+    ports:
+      - "5432:5432"
+    volumes:
+      - control_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U control_app -d control"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  control_pgdata:

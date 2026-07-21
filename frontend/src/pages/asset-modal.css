@@ -1,0 +1,700 @@
+/* =====================================================================
+   Modais de Ativo — cadastro (AssetCreateModal) e detalhe (AssetDetailModal)
+   Reaproveitam .modal-backdrop, .modal e .modal__head de peripherals-modal.css
+   ===================================================================== */
+
+/* ---------- Tamanhos por modal ---------- */
+.asset-modal { width: min(480px, 100%); }
+.asset-detail-modal { width: min(680px, 100%); }
+
+/* ---------- Formulário de cadastro ---------- */
+.asset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 6px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* Labels uppercase dos campos de form em modais.
+
+   Cor da label resolve um problema de contraste APENAS no dark:
+   - Dark: --text-muted (#828995) sobre painel ~#222A3F dava 3.9:1
+     (abaixo do WCAG AA de 4.5:1 pra texto pequeno). Trocado pra
+     --text-secondary (#aab0bb) que dá 6.1:1 — AAA pleno.
+   - Light: mantém --text-muted (#5a6580) que já tinha 5.1:1 sobre
+     painel branco translúcido — sem necessidade de mudar.
+
+   Estratégia: regra default usa --text-secondary (resolve dark,
+   já que dark é o tema default). Override no [data-theme='light']
+   força --text-muted pra preservar o look atual no light. */
+.form-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Override pro light — mantém o tom anterior, sem alterações */
+[data-theme='light'] .form-label {
+  color: var(--text-muted);
+}
+
+/* Select customizado — appearance:none remove visual nativo do browser,
+   e desenhamos uma setinha SVG (chevron-down estilo Lucide) como
+   background-image. O dropdown popup quando clicado ainda é controlado
+   pelo SO — limitação fundamental do <select> HTML que não dá pra
+   contornar sem substituir por componente custom. */
+.form-field select.field {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  /* SVG chevron-down em data URI. Cor #7a8090 funciona em ambos os
+     temas: visível no dark navy e legível no light azul claro. */
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%237a8090' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='2 2 6 6 10 2'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  padding-right: 40px;
+}
+
+.form-error {
+  margin: 0;
+  padding: 10px 14px;
+  background: rgba(194, 58, 58, 0.08);
+  border: 1px solid rgba(194, 58, 58, 0.25);
+  border-radius: var(--r-sm);
+  color: #e08383;
+  font-size: 13px;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* ---------- Painel de detalhe ---------- */
+.detail-section {
+  padding-top: 22px;
+  margin-top: 22px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.detail-section:first-of-type {
+  border-top: none;
+  margin-top: 18px;
+  padding-top: 0;
+}
+
+.detail-current {
+  margin: 10px 0 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.detail-actions-hint {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Versão compacta da timeline para caber dentro do modal */
+.timeline.timeline--compact .timeline__item { padding-bottom: 20px; }
+.timeline.timeline--compact .timeline__transition { font-size: 14px; }
+.timeline.timeline--compact .timeline__meta { font-size: 12px; }
+
+/* =====================================================================
+   Modal de movimentação (Atribuir, Receber, Reaproveitar, etc.)
+   ===================================================================== */
+
+.movement-modal { width: min(580px, 100%); }
+
+/* Empilhamento: modais que abrem em cima de outro modal (Atribuir,
+   Receber, etc abertos a partir de AssetDetailModal).
+
+   Estratégia intermediária (3ª iteração desta arquitetura,
+   calibrada após testes visuais):
+
+   1. Backdrop do stacked tem OVERLAY (18%) + BLUR (12px), em vez
+      de cópia completa do backdrop normal (28% + 14px) que causava
+      "caverna escura" pela acumulação.
+
+   2. Acumulação calculada:
+      - Modal único: 28% escurecido
+      - "Caverna" anterior (2 overlays a 28%): 48% — feio
+      - 1ª tentativa intermediária (12%): 37% — sutil mas conteúdo
+        do modal 1 vazava demais
+      - 2ª tentativa (15%): 39% — ainda lia texto atrás
+      - Atual (18%): 41% — abafa o suficiente, sem caverna
+
+   3. Modal stacked NÃO sobrescreve seu próprio glass — herda do
+      .modal base. Mesma cor, mesma opacidade, mesma química do
+      modal 1. Garante coerência cromática total.
+
+   4. Áreas onde o modal 1 aparece fora do modal 2 (laterais,
+      topo, base) ficam levemente escurecidas e desfocadas pelo
+      backdrop stacked — vira "atmosfera" em vez de competir com
+      o foco do modal 2.
+
+   5. Blur de 12px (vs 14px do backdrop normal) borra o texto do
+      modal 1 a ponto de virar mancha sem palavras identificáveis.
+
+   6. Blur acumula opticamente: 14px (backdrop modal 1) + 12px
+      (backdrop modal 2) ≈ ~18-19px efetivo no fundo distante.
+      Coerente fisicamente com "vidro sobre vidro". */
+.modal-backdrop.modal-backdrop--stacked {
+  z-index: 60;
+  /* Usa as MESMAS variáveis de tema do backdrop base (não preto
+     hardcoded). Antes era rgba(0,0,0,0.18) fixo — invisível no tema
+     escuro, mas no claro virava um cinza escuro que ignorava o tema e
+     o glass. Agora acompanha tema + intensidade como todo o resto. */
+  background: var(--modal-backdrop-bg);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+}
+
+/* ---------- Bloco de contexto (ativo + transição) ---------- */
+.movement-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 22px;
+  padding: 14px 18px;
+  background: var(--bg-recess);
+  box-shadow: var(--pressed);
+  border-radius: var(--r-md);
+  flex-wrap: wrap;
+}
+
+.movement-context__asset {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.movement-context__model {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+}
+.movement-context__serial {
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.movement-context__transition {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.movement-context__arrow {
+  color: var(--led);
+  font-size: 18px;
+  font-weight: 600;
+  filter: drop-shadow(0 0 6px var(--led-glow));
+}
+
+/* ---------- Layout do formulário ---------- */
+
+/* Linha de dois campos lado a lado (Colaborador | Setor). Vira coluna
+   única em telas estreitas. */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  /* Ancora os campos pela BASE: quando um label ocupa 2 linhas e o
+     outro só 1, os inputs continuam alinhados na mesma altura (o label
+     cresce pra cima, o input fica embaixo). Sem isso, o input do campo
+     de label curto sobe e cria o efeito "diagonal". */
+  align-items: end;
+}
+@media (max-width: 520px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+
+textarea.field {
+  font: inherit;
+  letter-spacing: var(--tracking-wide);
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.45;
+}
+
+/* ---------- Botões de ação no painel de detalhe ---------- */
+.detail-actions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.detail-actions-grid .btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+.detail-actions-grid .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn__hint {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 2px 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+}
+
+/* =====================================================================
+   ReceiveModal — variações pra duplo destino e botão de exceção
+   ===================================================================== */
+
+/* "ou" pequeno entre as pílulas de destino possível */
+.movement-context__or {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  margin: 0 4px;
+}
+
+/* Hint sob o bloco de contexto explicando os dois caminhos */
+.movement-hint {
+  margin: -8px 0 18px;
+  padding: 0 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+/* Hint inline no rótulo de campo (ex.: "obrigatório para Danificado") */
+.form-label__hint {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+  margin-left: 6px;
+}
+
+/* Footer com escolha dupla — Cancelar à esquerda, dois confirms à direita */
+.form-footer--dual {
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+}
+.form-footer__choices {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Variante "warning" do botão — caminho de exceção (Spectra/Danificado).
+   Usa o amarelo dourado de .pill--Danificado pra coerência cromática. */
+.btn.warning {
+  color: #d8b15a;
+}
+.btn.warning::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 9px;
+  border-radius: 50%;
+  background: #d8b15a;
+  box-shadow: 0 0 8px rgba(216, 177, 90, 0.32);
+  vertical-align: middle;
+}
+.btn.warning:focus-visible {
+  outline-color: #d8b15a;
+}
+
+/* =====================================================================
+   DiscardModal — banner de aviso de irreversibilidade
+   ===================================================================== */
+
+.discard-warning {
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  background: rgba(216, 177, 90, 0.06);
+  border: 1px solid rgba(216, 177, 90, 0.25);
+  border-left-width: 3px;
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.discard-warning strong {
+  color: #d8b15a;
+  font-weight: 600;
+}
+
+.discard-warning em {
+  font-style: normal;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* =====================================================================
+   ReassignModal — blocos De / Para com cross-over visual
+   ===================================================================== */
+
+.reassign-block {
+  position: relative;
+  padding: 14px 16px 12px;
+  border-radius: var(--r-md);
+  background: var(--bg-recess);
+  box-shadow: var(--pressed);
+}
+.reassign-block + .reassign-block {
+  margin-top: 4px;
+}
+
+.reassign-block__label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+/* Estado read-only: dados do colaborador anterior */
+.reassign-block--from .reassign-block__content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.reassign-block--from .reassign-block__content strong {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+}
+.reassign-block__meta {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  letter-spacing: var(--tracking-wide);
+}
+.reassign-block__warning {
+  color: #d8b15a;
+  font-size: 12.5px;
+  margin: 0;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Estado editável: novo colaborador. Reseta o fundo do block pra que
+   os inputs internos tenham o tratamento normal de .field */
+.reassign-block--to {
+  background: transparent;
+  box-shadow: none;
+  padding: 4px 0 0;
+}
+.reassign-block--to .reassign-block__label {
+  margin-bottom: 12px;
+  padding-left: 4px;
+}
+
+/* Divisor entre os blocos — seta sutil indicando o fluxo */
+.reassign-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 0 2px;
+  color: var(--led);
+  font-size: 18px;
+  filter: drop-shadow(0 0 6px var(--led-glow));
+  opacity: 0.7;
+}
+
+/* =====================================================================
+   EditLogModal — bloco do motivo separado visualmente do form
+   ===================================================================== */
+
+.correction-reason {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--glass-border);
+}
+
+.correction-reason .form-field {
+  margin-top: 0;
+}
+
+/* =====================================================================
+   Descarte step 2 — bloco de confirmação destrutiva
+
+   Visual mais forte que o aviso do step 1 (.discard-warning) porque
+   aqui estamos LITERALMENTE a 1 clique do irreversível. Foco vermelho
+   LED no ícone + borda esquerda da cor da marca.
+   ===================================================================== */
+
+.discard-confirm-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: 4px 0 18px 0;
+  border-radius: 10px;
+  background: rgba(194, 58, 58, 0.08);
+  border-left: 3px solid var(--led);
+  color: var(--text-primary);
+}
+
+.discard-confirm-warning__icon {
+  flex-shrink: 0;
+  color: var(--led);
+  margin-top: 2px;
+}
+
+.discard-confirm-warning__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: var(--tracking-wide);
+}
+
+.discard-confirm-warning__text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.discard-confirm-warning__text span {
+  color: var(--text-secondary);
+}
+
+/* ---------------------------------------------------------------------
+   Resumo do que será descartado — definition list compacta
+   --------------------------------------------------------------------- */
+
+.discard-confirm-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 18px 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--bg-recess);
+}
+
+.discard-confirm-summary > div {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.discard-confirm-summary dt {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding-top: 2px;
+}
+
+[data-theme='light'] .discard-confirm-summary dt {
+  color: var(--text-muted);
+}
+
+.discard-confirm-summary dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.discard-confirm-summary dd code {
+  font-family: var(--mono, ui-monospace, 'SF Mono', Menlo, monospace);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+.discard-confirm-summary__reason {
+  /* Motivo pode ser longo e o textarea suporta quebra de linha.
+     Preserva a formatação visual original do textarea. */
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-secondary) !important;
+}
+
+/* =====================================================================
+   Recebimento de equipamentos (fechamento de SC com SNs)
+   ===================================================================== */
+
+/* Dica sob um campo de formulário — texto pequeno, secundário */
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* Textarea de SNs em fonte monoespaçada — alinha colunas coladas do
+   Excel e facilita conferir SNs visualmente */
+.field--mono {
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas,
+    monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Aviso de divergência de quantidade no relatório de recebimento */
+.receiving-mismatch {
+  color: #d8b15a;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Lista expansível das SNs puladas (já existentes no estoque) */
+.receiving-skipped {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.receiving-skipped summary {
+  cursor: pointer;
+  color: var(--brand-blue);
+  padding: 6px 0;
+  user-select: none;
+}
+
+.receiving-skipped summary:hover {
+  text-decoration: underline;
+}
+
+.receiving-skipped ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: var(--bg-recess);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  max-height: 160px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.receiving-skipped li code {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* =====================================================================
+   Cadastro de equipamentos em massa (toggle + preview)
+   ===================================================================== */
+
+/* Toggle Individual | Em massa */
+.mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-recess);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+
+.mode-toggle__btn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.mode-toggle__btn:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.mode-toggle__btn.is-active {
+  background: color-mix(in srgb, var(--brand-blue) 18%, transparent);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.mode-toggle__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Preview do cadastro em massa */
+.bulk-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bulk-preview__head {
+  font-size: 14px;
+  color: var(--text-primary);
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--brand-blue) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-blue) 20%, transparent);
+  border-radius: 10px;
+  line-height: 1.5;
+}
+
+.bulk-preview__list {
+  list-style: none;
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--bg-recess);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bulk-preview__list li code {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* Linha do toggle de modo + botão de ajuda "?" ao lado.
+   O toggle ocupa o espaço; o "?" fica à direita, alinhado. */
+.mode-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mode-toggle-row .mode-toggle {
+  flex: 1;
+}

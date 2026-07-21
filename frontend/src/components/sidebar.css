@@ -1,0 +1,194 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 30px 20px;
+  /* Segurança pra telas baixas: se a própria sidebar ficar mais alta
+     que a viewport (muitos itens de menu + tela curta), ela rola
+     internamente em vez de cortar o logout. Na maioria das telas não
+     há o que rolar — o margin-top:auto do rodapé mantém o logout no
+     fundo, sempre visível. */
+  overflow-y: auto;
+  /* Gradient azul-cinza profissional dessaturado. Mais saturado/escuro
+     que o body pra atuar como ÂNCORA visual (papel macOS: sidebar é
+     "vidro fosco mais espesso" que o painel principal). Alinhado com
+     a paleta dessaturada do dark (sat ~22% — referência GitHub Dark). */
+  background: linear-gradient(155deg, #11141d 0%, #08090f 100%);
+  /* estrutura esculpida: sombra projetada para fora + filete interno */
+  box-shadow:
+    10px 0 24px rgba(0, 0, 0, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.03);
+}
+
+/* No tema CLARO, o gradient escuro hardcoded fica fora de tom. Trocamos
+   por gradient azul Unifique mais saturado que o body — sidebar atua
+   como ÂNCORA visual mais densa, igual ao macOS onde a sidebar é
+   "vidro fosco mais espesso" que o painel principal. */
+[data-theme='light'] .sidebar {
+  background: linear-gradient(155deg, #c5d4e8 0%, #b3c4dc 100%);
+  box-shadow:
+    6px 0 16px rgba(40, 70, 130, 0.10),
+    inset -1px 0 0 rgba(40, 70, 130, 0.08);
+}
+
+.sidebar__brand {
+  /* sangra até as bordas físicas da sidebar pra projetar o canal edge-to-edge */
+  margin: 0 -20px;
+  padding: 4px 24px 22px;
+
+  /* canal escavado: corte escuro nítido + reflexo de luz + projeção descendente
+     pronunciada. Valores calibrados pra ficarem visíveis SEM brigar com a
+     paleta dessaturada (não usa azul puro). */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.7);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06),     /* linha de luz refletida abaixo do corte */
+    0 14px 20px -6px rgba(0, 0, 0, 0.65);  /* sombra projetando descendente */
+}
+
+/* No tema CLARO, o canal escavado precisa de cor MAIS ESCURA (não só
+   azul-Unifique) pra ter contraste real contra o fundo azul-claro da
+   sidebar. Estratégia: combinar 2 sombras (uma próxima nítida + outra
+   distante difusa) pra criar profundidade em camadas, como o dark faz
+   com preto sobre dark. */
+[data-theme='light'] .sidebar__brand {
+  /* Border mais opaco — precisa "morder" o fundo azul-claro pra ler */
+  border-bottom: 1px solid rgba(30, 50, 90, 0.30);
+  box-shadow:
+    /* Linha de luz branca refletida — quase 100% pra criar a borda
+       saliente do canal escavado (o "highlight do declive") */
+    0 1px 0 rgba(255, 255, 255, 0.95),
+    /* Sombra PRÓXIMA: spread 0, blur 8 — define a borda do canal */
+    0 6px 8px rgba(20, 40, 80, 0.22),
+    /* Sombra DISTANTE: difusa, projeta a profundidade pra dentro
+       do nav abaixo. Mais escura (azul-marinho profundo) pra
+       compensar baixa saturação contra fundo já azul. */
+    0 16px 24px -6px rgba(20, 40, 80, 0.28);
+}
+
+.sidebar__nav { display: flex; flex-direction: column; gap: 10px; }
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  letter-spacing: var(--tracking-wide);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 13px 16px;
+  cursor: pointer;
+  transition: color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.nav-item:hover { color: var(--text-primary); }
+
+.nav-item__rail {
+  width: 4px;
+  height: 18px;
+  border-radius: 4px;
+  background: transparent;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* Item ativo: relevo físico "pressionado/carimbado" + filete de LED */
+.nav-item--active {
+  color: var(--text-satin);
+  background: var(--bg-recess);
+  box-shadow: var(--pressed);
+}
+.nav-item--active .nav-item__rail {
+  background: var(--led);
+  box-shadow: 0 0 9px var(--led-glow);
+}
+.nav-item:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
+
+.sidebar__user {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 16px;
+}
+.sidebar__role { font-weight: 600; color: var(--text-primary); }
+
+/* ---------- Caixa de sessão no rodapé: info + botão Logout ---------- */
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.sidebar__user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Nome real do usuário (login SSO) — em destaque, com o papel abaixo. */
+.sidebar__name {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar__role {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Quando há nome acima, o papel vira informação secundária (menor/suave). */
+.sidebar__name + .sidebar__role {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.sidebar__logout {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  padding: 6px 12px 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.sidebar__logout svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+.sidebar__logout:hover {
+  color: var(--led);
+  border-color: rgba(181, 48, 47, 0.4);
+  background: rgba(181, 48, 47, 0.05);
+}
+.sidebar__logout:focus-visible {
+  outline: 1px solid var(--led);
+  outline-offset: 2px;
+}

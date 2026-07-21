@@ -1,0 +1,120 @@
+/* =====================================================================
+   Settings menu — engrenagem + popover de preferências
+   ===================================================================== */
+
+.settings-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Gatilho circular — mesmo desenho do theme-toggle pra consistência */
+.settings-menu__trigger {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+
+  color: var(--text-secondary);
+  transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.1s;
+}
+.settings-menu__trigger svg {
+  width: 20px;
+  height: 20px;
+}
+.settings-menu__trigger:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.settings-menu__trigger:active {
+  transform: scale(0.94);
+}
+.settings-menu__trigger:focus-visible {
+  outline: 1px solid var(--led);
+  outline-offset: 2px;
+}
+[data-theme='light'] .settings-menu__trigger:hover {
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+/* Popover — abre abaixo e alinhado à direita do gatilho */
+.settings-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 240px;
+  padding: 16px;
+  border-radius: 14px;
+
+  background: var(--glass-modal);
+  border: 1px solid var(--glass-modal-border);
+  backdrop-filter: blur(var(--modal-blur));
+  -webkit-backdrop-filter: blur(var(--modal-blur));
+  box-shadow: var(--modal-shadow);
+}
+
+.settings-popover__section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-popover__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.settings-popover__hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+/* Segmented control — 3 botões lado a lado (Sólido | Médio | Vidro) */
+.settings-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-recess);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+
+.settings-segmented__btn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.settings-segmented__btn:hover {
+  color: var(--text-primary);
+}
+.settings-segmented__btn.is-active {
+  background: color-mix(in srgb, var(--brand-blue) 20%, transparent);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.settings-segmented__btn:focus-visible {
+  outline: 1px solid var(--brand-blue);
+  outline-offset: 1px;
+}

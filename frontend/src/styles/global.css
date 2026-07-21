@@ -1,0 +1,147 @@
+@import './tokens.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; }
+
+/* Margin zero em todos os 3 níveis. Altura: html sempre 100%, body
+   flexível (min-height) pra crescer com o conteúdo do app-shell. */
+html, body, #root { margin: 0; }
+html { height: 100%; }
+body, #root { min-height: 100%; }
+
+/* SAFETY NET: cor sólida no html pra cobrir qualquer área que escape
+   do gradient (ex.: scroll exagerado, áreas residuais do app-shell).
+   Sem isso, o branco padrão do browser aparece quando o app cresce
+   além do body. */
+html {
+  background-color: var(--bg-base);
+}
+
+body {
+  /* Atmosfera profunda da plataforma. As 3 paradas são variáveis pra
+     permitir que o tema light defina sua própria paleta.
+
+     IMPORTANTE — geometria do gradient:
+     `farthest-corner` faz a elipse SE ESTICAR até o canto mais distante
+     do ponto inicial (12% 0%). Como o centro está no topo-esquerda, o
+     canto mais distante é o inferior-direito — então o gradient cobre
+     TODA a tela uniformemente, sem deixar área sólida residual. */
+  background:
+    radial-gradient(
+      farthest-corner at 12% 0%,
+      var(--body-top) 0%,
+      var(--bg-base) 55%,
+      var(--body-bottom) 100%
+    );
+  /* fixed: gradient não rola com o conteúdo — visual constante. Cobre
+     a viewport inteira, independente do tamanho do body. */
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  letter-spacing: var(--tracking-wide);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --------- Layout em duas colunas --------- */
+.app-shell {
+  display: grid;
+  grid-template-columns: 264px 1fr;
+  /* Altura TRAVADA na viewport (não min-height). Com height fixo, a
+     sidebar e o conteúdo são duas colunas de altura igual à tela, e
+     cada uma controla sua própria rolagem. A sidebar não tem o que
+     rolar → fica fixa. Só o .content rola (overflow-y: auto abaixo).
+     Resolve o logout sumindo: ele fica sempre visível no rodapé da
+     sidebar, independente do tamanho do conteúdo. */
+  height: 100vh;
+  overflow: hidden;
+}
+
+.content {
+  padding: 40px 48px;
+  /* Rola só o conteúdo; a sidebar permanece fixa ao lado. */
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.page-head { margin-bottom: 28px; }
+.page-head h1 {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  margin: 0 0 6px;
+}
+.page-head p { margin: 0; color: var(--text-muted); font-size: 14px; }
+
+.grid { display: grid; gap: 20px; }
+.grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid.cols-2 { grid-template-columns: 1.4fr 1fr; }
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* --------- Cartão neumórfico extrudado --------- */
+.card {
+  background: linear-gradient(145deg, var(--surface-hi), var(--surface));
+  border-radius: var(--r-lg);
+  box-shadow: var(--extrude);
+  padding: 24px;
+}
+
+/* --------- Cartão glass (sobreposições/realces) --------- */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+/* --------- Botões --------- */
+.btn {
+  font: inherit;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-primary);
+  background: linear-gradient(145deg, var(--surface-hi), var(--surface));
+  border: none;
+  border-radius: var(--r-sm);
+  box-shadow: var(--extrude-sm);
+  padding: 11px 18px;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.05s ease;
+}
+.btn:hover { box-shadow: var(--extrude); }
+.btn:active { box-shadow: var(--pressed); transform: translateY(1px); }
+.btn:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
+.btn.accent { color: var(--text-satin); }
+.btn.accent::before { /* filete LED no botão de ação */
+  content: ''; display: inline-block; width: 7px; height: 7px;
+  margin-right: 9px; border-radius: 50%;
+  background: var(--led); box-shadow: 0 0 8px var(--led-glow);
+}
+
+/* Estilo unificado pra todos os controles de formulário.
+   Seletor inclui select e textarea — antes era só input.field, e
+   por isso selects ficavam com aparência nativa branca do browser. */
+input.field,
+select.field,
+textarea.field {
+  font: inherit;
+  letter-spacing: var(--tracking-wide);
+  width: 100%;
+  color: var(--text-primary);
+  background: var(--bg-recess);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--pressed);
+  padding: 13px 16px;
+}
+input.field::placeholder,
+textarea.field::placeholder { color: var(--text-muted); }
+input.field:focus-visible,
+select.field:focus-visible,
+textarea.field:focus-visible { outline: none; border-color: var(--led-soft); }

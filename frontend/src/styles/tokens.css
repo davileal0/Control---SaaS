@@ -1,0 +1,384 @@
+/* =====================================================================
+   Control — Design tokens
+   Estética: Corporativo Premium, Geométrico, Ultra-Limpo.
+   Híbrido de neumorfismo de alta densidade + glassmorphism sobre
+   superfície de alumínio anodizado escuro. Acento: LED vermelho fosco,
+   usado com extrema parcimônia (apenas estados e o filete da marca).
+   ===================================================================== */
+
+:root {
+  /* Superfícies — azul-cinza profissional (paleta dessaturada).
+     Mesma família navy 220° do light, mas saturação ~22% em vez de
+     ~43% — alinhado com referenciais de mercado (GitHub Dark,
+     Linear, MacOS Big Sur dark). Anteriormente a paleta navy estava
+     "carregada demais" e criava conflito visual entre o painel
+     (lavado pelo backdrop) e os inputs (sólidos saturados).
+
+     REGRA UNIVERSAL UI (aplicada em ambos os temas):
+     --bg-recess é MAIS CLARO que --bg-base. Peças interativas
+     (chips, nav, inputs) ficam levemente elevadas sobre o fundo —
+     padrão MacOS moderno. A metáfora antiga de "afundado = mais
+     escuro" foi abandonada porque cria sensação de buraco/vazio
+     em UI compacta. Afundamento é dado APENAS pela inset shadow
+     sutil no --pressed. */
+  --bg-recess: #1d2330;     /* mais CLARO que base — anti corpo-escuro */
+  --bg-base: #131822;       /* fundo geral azul-cinza profissional     */
+  --surface: #1c2230;       /* painéis extrudados                      */
+  --surface-hi: #232a38;    /* topo de relevo                          */
+
+  /* Sombras neumórficas (par claro/escuro = relevo físico real) */
+  --shadow-dark: #070a10;
+  --shadow-light: #272d3a;
+
+  /* Glassmorphism — opacidade aumentada de 0.045 pra 0.08. Antes era
+     quase invisível (branco quase transparente sobre cinza neutro).
+     Agora, com azul-marinho atrás, 8% de branco dá corpo visível ao
+     vidro sem virar "branco translúcido". Padrão MacOS dark. */
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-strong: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 18px;
+
+  /* Border SUTIL pra cards sólidos (não-glass). Token usado pelos
+     componentes do redesign novo (HeroCard, IconKPI, distribution-card)
+     pra manter consistência visual entre todos os blocos do dashboard.
+     Calibrado pra ficar visível mas não barulhento sobre --bg-recess. */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* Glass DEDICADO pra modais — azul-cinza com leve saturação,
+     alinhado com a paleta dessaturada do dark. Antes era
+     rgba(40,58,100,0.80) — saturação alta (sat ~50%) que destoava
+     do painel quando misturado com o backdrop. Agora ~32% saturação
+     percebida — mesma família dos inputs e do body. */
+  --glass-modal: rgba(38, 46, 68, 0.80);
+  --glass-modal-border: rgba(255, 255, 255, 0.04);
+
+  /* Blur do backdrop-filter específico de modais — 26px é mais espesso
+     que o blur de cards (18px) porque modal precisa garantir que o
+     conteúdo atrás vire só atmosfera, não distração legível. */
+  --modal-blur: 26px;
+
+  /* Backdrop do modal — overlay sutil + blur forte. Antes era preto 45%
+     que matava qualquer paleta atrás. Agora preto leve (28%) deixa
+     o body navy "respirar" através, dando contexto visual real ao
+     efeito glass do modal. */
+  --modal-backdrop-bg: rgba(0, 0, 0, 0.28);
+  --modal-backdrop-blur: 14px;
+
+  /* Sombra projetada exclusiva pra modais — apenas DROP SHADOW escura
+     pra baixo (não par claro/escuro do --extrude). O extrude funciona
+     pra cards no body com gradient ("peça esculpida"); modais são
+     peças FLUTUANTES sobre backdrop e precisam de sombra "abaixo de
+     mim", não "ao meu redor". Duas camadas (larga difusa + média
+     próxima) = padrão elevation-4 do Material/iOS. */
+  --modal-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+
+  /* Acento — LED vermelho FOSCO e discreto (não néon) */
+  --led: #c23a3a;
+  --led-soft: #a83434;
+  --led-glow: rgba(194, 58, 58, 0.32);
+
+  /* Marca Unifique — azul corporativo. Usado pontualmente como
+     acento secundário (links, séries de gráficos, badges) e como
+     base atmosférica de ambos os temas (light claro, dark navy). */
+  --brand-blue: #0a3d8f;
+  --brand-blue-soft: #e1ebf7;
+
+  /* Texto */
+  --text-satin: #ffffff;    /* branco-acetinado (logotipo)            */
+  --text-primary: #e7e9ed;
+  --text-secondary: #aab0bb;
+  --text-muted: #828995;
+
+  /* Gradients da marca (BrandIcon) — leve viés azul pra coerência
+     com a paleta navy. Continua "metálico cinza escuro", só com
+     temperatura ligeiramente mais fria. */
+  --brand-grad-1: #3a4252;
+  --brand-grad-2: #6a7488;
+  --brand-grad-3: #2c3340;
+  --brand-grad-4: #454e5e;
+
+  /* Gradient do body (plataforma) — atmosfera profunda em qualquer
+     resolução. Dark: azul-cinza profissional dessaturado. Light: vide
+     bloco abaixo. Esta variável é o que SUSTENTA o efeito glass —
+     sem matiz no body, o vidro fosco não tem função. */
+  --body-top: #1e2330;
+  --body-bottom: #0a0d14;
+
+  /* Gradient da página de login — 4 stops do centro pras bordas */
+  --login-bg-1: #23272f;  /* centro claro (destaca card)             */
+  --login-bg-2: #1c1f26;
+  --login-bg-3: var(--bg-base);
+  --login-bg-4: #0e1014;  /* cantos (vinheta lateral)                */
+
+  /* Tipografia neo-grotesca geométrica */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.09em;
+
+  /* Raios e ritmo */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --space: 8px;
+
+  /* Relevos neumórficos prontos */
+  --extrude: 6px 6px 14px var(--shadow-dark), -6px -6px 14px var(--shadow-light);
+  --extrude-sm: 3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);
+
+  /* ELEVAÇÃO DO HERO (Direção D suave) — o card "coração" do dashboard.
+     No DARK: a superfície sobe usando --surface (mais clara que recess),
+     com sombra ambiente projetada pra baixo (drop real, não neumórfica)
+     + borda de accent azul sutil + halo interno. Tudo calibrado pra
+     destaque SUAVE — perceptível sem gritar. */
+  --hero-surface: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand-blue) 8%, var(--surface-hi)) 0%,
+    var(--surface) 100%
+  );
+  --hero-border: color-mix(in srgb, var(--brand-blue) 30%, transparent);
+  /* Borda com GRADIENTE DE LUZ (técnica A) — mais luminosa no topo,
+     esmaecendo pra baixo. Simula luz batendo na superfície. É o que
+     dá aparência "premium" (Linear/Vercel/Stripe). Aplicada via
+     pseudo-elemento com mask (border não aceita gradient direto).
+     DARK: brilho branco-azulado no topo → borda escura embaixo. */
+  --hero-border-gradient: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-blue) 55%, rgba(255, 255, 255, 0.5)) 0%,
+    color-mix(in srgb, var(--brand-blue) 32%, transparent) 35%,
+    color-mix(in srgb, var(--brand-blue) 12%, transparent) 100%
+  );
+  /* Fundo tonal do header (técnica B) — faixa que separa o cabeçalho
+     do corpo. Gradiente horizontal sutil de brand-blue. */
+  --hero-header-bg: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--brand-blue) 10%, transparent) 0%,
+    transparent 70%
+  );
+  --hero-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 24px -8px rgba(0, 0, 0, 0.55),
+    0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  /* Pressed (afundado) — versão sutil. ANTES era 5/10px com sombras
+     fortes, criando "moldura grossa" em peças pequenas como chips e
+     nav items. Agora 2/5px com rgba leve — peça apenas "indica" estar
+     afundada sem criar contorno pesado. Padrão MacOS. */
+  --pressed: inset 2px 2px 5px rgba(0, 0, 0, 0.35),
+             inset -2px -2px 5px rgba(255, 255, 255, 0.04);
+}
+
+/* =====================================================================
+   Intensidade do GLASSMORPHISM — preferência do usuário (data-glass)
+   =====================================================================
+   Aplicado no <html> por lib/glass.ts. Sobrescreve os tokens glass
+   conforme o nível escolhido. Funciona em dark E light porque o nível
+   "sólido" referencia --surface (que cada tema já define).
+
+   Default (sem atributo ou data-glass="vidro") = tokens originais do
+   :root, ou seja, o glassmorphism cheio. Só "medio" e "solido"
+   precisam sobrescrever.
+
+   MÉDIO — transparência e blur reduzidos (meio-termo). O vidro ainda
+   existe, mas mais discreto: menos translúcido, menos desfoque. */
+:root[data-glass='medio'] {
+  --glass: color-mix(in srgb, var(--surface) 78%, transparent);
+  --glass-strong: color-mix(in srgb, var(--surface) 86%, transparent);
+  --glass-blur: 8px;
+  --glass-modal: color-mix(in srgb, var(--surface) 90%, transparent);
+  --modal-blur: 12px;
+  --modal-backdrop-blur: 8px;
+}
+
+/* SÓLIDO — sem transparência nem blur. Cards e modais ficam opacos
+   (cor de superfície cheia). Pra quem não curte o efeito vidro. O blur
+   vira 0 pra eliminar o backdrop-filter (também ganha performance). */
+:root[data-glass='solido'] {
+  --glass: var(--surface);
+  --glass-strong: var(--surface-hi);
+  --glass-blur: 0px;
+  --glass-modal: var(--surface);
+  --modal-blur: 0px;
+  --modal-backdrop-blur: 0px;
+  /* Backdrop do modal um pouco mais escuro pra compensar a ausência
+     de blur (sem blur, precisa de mais contraste pra separar do fundo) */
+  --modal-backdrop-bg: rgba(0, 0, 0, 0.45);
+}
+
+/* =====================================================================
+   Tema CLARO — aplicado globalmente quando <html data-theme="light">.
+   Todas as variáveis abaixo sobrescrevem as do :root padrão. Todos os
+   componentes que usam var(--...) se adaptam automaticamente.
+
+   PRINCÍPIO: profundidade vem do glass translúcido sobre fundo COLORIDO
+   (paleta Unifique azul). Glass não funciona sobre fundo branco — por
+   isso o bg-base é azul-claro, não branco. As peças (card, modais)
+   ficam vidro branco translúcido sobre essa atmosfera azul.
+   ===================================================================== */
+:root[data-theme='light'] {
+  /* Superfícies — hierarquia recalibrada pra light com lógica
+     INVERTIDA no recess:
+     - No dark, --bg-recess é MAIS ESCURO que --bg-base (afundado = sombra)
+     - No light, --bg-recess é MAIS CLARO que --bg-base (afundado +
+       luz ambiente "preenche" a depressão). Evita o problema
+       "corpo escuro + borda clara" em chips, nav items e inputs.
+     A sensação de "afundamento" passa a vir SÓ da inset shadow sutil,
+     não da cor. Padrão MacOS Light. */
+  --bg-recess: #edf2f8;     /* mais CLARO que base — anti corpo-escuro */
+  --bg-base: #dae4f0;       /* fundo com matiz visível em área grande  */
+  --surface: #e8eef7;
+  --surface-hi: #ffffff;    /* peças sólidas (raro — preferimos glass) */
+
+  /* Sombras com viés azulado, calibradas pra fundo matizado */
+  --shadow-dark: #b1bdd1;
+  --shadow-light: #ffffff;
+
+  /* Glass com viés AZULADO sutil (não branco-puro) pra evitar reflexo
+     reluzente em monitores grandes. Opacidade 0.54 — atenua o brilho
+     que o usuário relatou ("cards resplandecentes demais"). Sobre o
+     body azulado, ainda lê como vidro fosco macOS — mas DISCRETO. */
+  --glass: rgba(248, 252, 255, 0.54);
+  --glass-strong: rgba(250, 253, 255, 0.72);
+  --glass-border: rgba(40, 70, 130, 0.10);
+
+  /* Border SUTIL pra cards sólidos no light. Azul-Unifique tonal,
+     calibrado pra ler sobre --bg-recess claro sem virar linha pesada. */
+  --border-subtle: rgba(40, 70, 130, 0.14);
+
+  /* ELEVAÇÃO DO HERO (Direção D suave) — versão LIGHT.
+     No light, "elevação" = superfície quase branca (--surface-hi) que
+     sobe sobre o fundo azul-claro + sombra azulada projetada pra baixo
+     (igual macOS light) + borda azul-Unifique sutil + leve halo de
+     accent no topo. Destaque SUAVE: card "respira" acima do dashboard. */
+  --hero-surface: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand-blue) 5%, var(--surface-hi)) 0%,
+    var(--surface) 100%
+  );
+  --hero-border: color-mix(in srgb, var(--brand-blue) 28%, transparent);
+  /* Borda gradiente de luz (técnica A) — LIGHT. Brilho branco no topo
+     (luz batendo) → azul-Unifique esmaecendo pra baixo. */
+  --hero-border-gradient: linear-gradient(
+    160deg,
+    color-mix(in srgb, #ffffff 80%, var(--brand-blue)) 0%,
+    color-mix(in srgb, var(--brand-blue) 30%, transparent) 38%,
+    color-mix(in srgb, var(--brand-blue) 14%, transparent) 100%
+  );
+  /* Fundo tonal do header (técnica B) — LIGHT */
+  --hero-header-bg: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--brand-blue) 8%, transparent) 0%,
+    transparent 70%
+  );
+  --hero-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 10px 28px -10px rgba(20, 40, 80, 0.26),
+    0 3px 10px -3px rgba(20, 40, 80, 0.14);
+
+  /* Glass DEDICADO pra modais no light — branco translúcido 78%.
+     Levemente mais opaco que o dark (75%) porque branco sobre fundo
+     claro tende a ficar visualmente mais "fraco". Mantém destaque
+     dos campos enquanto deixa o body azul atmosférico atrás
+     "respirar" pelo glass — efeito MacOS sheet light. */
+  --glass-modal: rgba(255, 255, 255, 0.78);
+  --glass-modal-border: rgba(40, 70, 130, 0.04);
+  --modal-shadow:
+    0 24px 60px rgba(40, 70, 130, 0.18),
+    0 8px 24px rgba(40, 70, 130, 0.10);
+
+  /* LED um pouco mais escuro/saturado pra contrastar com fundo claro */
+  --led: #a82828;
+  --led-soft: #8a2222;
+  --led-glow: rgba(168, 40, 40, 0.22);
+
+  /* Texto: preto e cinzas escuros pra máxima legibilidade.
+     text-muted ajustado pra #5a6580 (era #6e7a8e) — atinge contraste
+     WCAG AA mínimo (4.5:1) sobre fundo claro/glass. Antes ficava
+     invisível em eyebrows dentro de cards glass (~3.3:1, abaixo
+     do limite legível). */
+  --text-satin: #1a1d24;
+  --text-primary: #1a1d24;
+  --text-secondary: #44516a;
+  --text-muted: #5a6580;
+
+  /* BrandIcon: cinzas escuros com leve azul */
+  --brand-grad-1: #3a4252;
+  --brand-grad-2: #6a7488;
+  --brand-grad-3: #2a3040;
+  --brand-grad-4: #4a5468;
+
+  /* Gradient do body — atmosfera azul Unifique sutil. Em áreas amplas
+     o radial gradient sempre mantém matiz: nunca achata pra "branco
+     uniforme". É o que evita o flashbang.
+
+     IMPORTANTE: a variação entre body-top e bg-base precisa ser
+     PERCEPTÍVEL pra o neumorfismo dos cards funcionar — eles ficam
+     "elevados" porque o fundo NÃO é uniforme. Versão anterior tinha
+     #d8e2ef → #dae4f0 (diferença ~2 unidades hex, invisível). Agora
+     #eaf1f8 → #dae4f0 → #aec0d8 — gradient claramente perceptível,
+     ainda dentro da paleta dessaturada (sem azul saturado). */
+  --body-top: #eaf1f8;     /* topo-esquerda: quase branco-azulado, leve */
+  --body-bottom: #aec0d8;  /* canto inferior-direito: azul mais profundo */
+
+  /* Inset shadow (peça afundada) no light precisa ser MUITO mais sutil
+     que no dark. O --pressed dark usa 5px de blur com #07090c (quase
+     preto), o que vira "borda escura grossa" em paleta clara. Aqui
+     usamos 1-2px com rgba muito leve — peça apenas "indica" estar
+     afundada, sem criar moldura visual feia. */
+  --pressed: inset 1px 1px 2px rgba(40, 70, 130, 0.10),
+             inset -1px -1px 2px rgba(255, 255, 255, 0.55);
+
+  /* Gradient da página de login (mantém — só usado na tela compacta) */
+  --login-bg-1: #f3f7fd;
+  --login-bg-2: #e1ebf7;
+  --login-bg-3: #c8d8ee;
+  --login-bg-4: #a8bee0;
+  /* Backdrop do modal no light — tingimento azul Unifique sutil em
+     vez de preto. Antes overlay preto 45% sobre azul claro virava
+     "cinza sujo" que destruía a paleta. Agora o body azul atmosférico
+     fica visível através, levemente mais saturado. */
+  --modal-backdrop-bg: rgba(40, 70, 130, 0.15);
+}
+.brand-grad-1 { stop-color: var(--brand-grad-1); }
+.brand-grad-2 { stop-color: var(--brand-grad-2); }
+.brand-grad-3 { stop-color: var(--brand-grad-3); }
+.brand-grad-4 { stop-color: var(--brand-grad-4); }
+
+/* =====================================================================
+   Correção de precedência: glass × tema CLARO
+   =====================================================================
+   PROBLEMA: os blocos data-glass (médio/sólido) e o bloco data-theme
+   ='light' têm a MESMA especificidade (:root + 1 atributo) e ambos
+   redefinem --glass-modal. Como o bloco do tema claro vem depois no
+   arquivo, ele VENCIA e anulava a escolha de glass do usuário — no
+   sólido, o modal voltava a 0.78 (translúcido) em vez de opaco.
+
+   SOLUÇÃO: seletores que combinam OS DOIS atributos têm especificidade
+   maior (:root + 2 atributos), então a escolha de glass sempre vence
+   no tema claro também. Espelha os valores dos blocos data-glass, mas
+   com as cores do tema claro (--surface claro = #e8eef7). */
+:root[data-theme='light'][data-glass='medio'] {
+  --glass: color-mix(in srgb, var(--surface) 78%, transparent);
+  --glass-strong: color-mix(in srgb, var(--surface) 86%, transparent);
+  --glass-blur: 8px;
+  --glass-modal: color-mix(in srgb, var(--surface) 90%, transparent);
+  --modal-blur: 12px;
+  --modal-backdrop-blur: 8px;
+}
+:root[data-theme='light'][data-glass='solido'] {
+  --glass: var(--surface);
+  --glass-strong: var(--surface-hi);
+  --glass-blur: 0px;
+  --glass-modal: var(--surface);
+  --modal-blur: 0px;
+  --modal-backdrop-blur: 0px;
+  --modal-backdrop-bg: rgba(40, 70, 130, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

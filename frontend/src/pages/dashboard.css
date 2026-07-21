@@ -1,0 +1,424 @@
+/* =====================================================================
+   Dashboard — estilos específicos do dashboard enriquecido.
+   Princípios:
+   - Variáveis CSS pra adaptar tema automaticamente
+   - Cores semânticas (amarelo dourado = alerta) coerentes com o resto
+   - Estados de hover sutis nos cards interativos (low-stock-widget)
+   ===================================================================== */
+
+/* ---------- Linha 1: cards de destaque por categoria ---------- */
+
+.dashboard-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-highlights {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Category card: card sólido com border sutil — consistente com o
+   sistema visual do redesign (IconKPI, HeroCard, etc). NÃO usa --glass
+   pra não depender de background colorido atrás (que falha em áreas
+   sem hero). */
+.category-card {
+  background: var(--bg-recess);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.category-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Ícone da categoria: cinza-azulado discreto, não compete com a info.
+   No light fica cinza escuro; no dark, cinza claro — herda do contexto. */
+.category-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-recess);
+  color: var(--text-secondary);
+}
+
+.category-card__main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.category-card__big {
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-satin);
+  letter-spacing: -0.02em;
+}
+
+.category-card__suffix {
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+}
+
+.category-card__sub {
+  display: flex;
+  gap: 18px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: var(--tracking-wide);
+}
+
+.category-card__sub em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ---------- Linha 2: seletor de categoria no donut ----------
+
+   Pills clicáveis pra filtrar a visão do donut chart.
+
+   Antes eram transparente + borda fina — comunicava "decoração" mais
+   que "botão". Agora têm fundo sólido (--bg-recess) já em estado
+   inativo, sinalizando "peça interativa" via presença de superfície.
+
+   Hover com elevação (translateY + sombra) — comportamento clássico
+   macOS Big Sur+ que o olho moderno reconhece como "isso é clicável".
+*/
+
+.category-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.category-selector__pill {
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  /* Fundo sólido já em inativo: pill SEMPRE comunica "clicável". */
+  background: var(--bg-recess);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+/* Hover: leve elevação + sombra de relevo. Comportamento clássico
+   "botão físico que sobe quando você passa o mouse". */
+.category-selector__pill:hover {
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--extrude-sm);
+}
+
+/* Ativo: destaque claro com cor saturada de texto + box-shadow
+   extrude que sinaliza "selecionado e em relevo". Cor de texto
+   diferente de hover pra distinguir os dois estados. */
+.category-selector__pill.is-active {
+  color: var(--text-satin);
+  font-weight: 600;
+  background: var(--bg-recess);
+  box-shadow: var(--extrude-sm);
+  /* No ativo, transform 0 pra "fixar" a peça (não fica subindo no hover) */
+  transform: none;
+}
+.category-selector__pill.is-active:hover {
+  transform: none;
+}
+
+.category-selector__pill:focus-visible {
+  outline: 2px solid var(--led);
+  outline-offset: 2px;
+}
+
+/* ---------- Widget de estoque baixo (card clicável) ---------- */
+
+.low-stock-widget {
+  /* Card é um <button>: zera defaults */
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  /* Mesmo sistema visual dos outros cards do dashboard */
+  background: var(--bg-recess);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.low-stock-widget:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--brand-blue) 35%, var(--border-subtle));
+}
+.low-stock-widget:focus-visible {
+  outline: 2px solid var(--led);
+  outline-offset: 2px;
+}
+
+/* Estado saudável — sem alertas. Não é clicável (div, não button),
+   então sem hover/cursor. Mantém a mesma altura/padding do estado
+   com alertas pra o layout não saltar quando muda de estado. */
+.low-stock-widget--healthy {
+  cursor: default;
+}
+
+.low-stock-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  /* min-height aproxima da altura da lista de 3 itens, pra transição
+     entre estados (saudável ↔ alertas) não pular bruscamente */
+  min-height: 132px;
+  padding: 8px 0;
+}
+
+.low-stock-success__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: color-mix(in srgb, #2ea357 12%, transparent);
+  color: #2ea357;
+  margin-bottom: 2px;
+}
+
+.low-stock-success__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.low-stock-success__sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  max-width: 220px;
+  line-height: 1.4;
+}
+
+.low-stock-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.low-stock-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-recess);
+  /* sombra inset SUTIL (mesma filosofia do --pressed mas mais discreta) */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  transition: background 0.15s;
+}
+
+.low-stock-item__icon {
+  display: inline-flex;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.low-stock-item__model {
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.low-stock-item__count {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-satin);
+  font-variant-numeric: tabular-nums;
+  min-width: 24px;
+  text-align: right;
+}
+
+/* Item em ALERTA: amarelo dourado discreto. Coerente com a cor de
+   "danificado" usada no resto da plataforma. Não vermelho — pra não
+   competir com o LED de marca. */
+.low-stock-item.is-alert .low-stock-item__count {
+  color: #d8b15a;
+}
+
+.low-stock-item__alert {
+  display: inline-flex;
+  color: #d8b15a;
+  flex-shrink: 0;
+}
+
+.low-stock-cta {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+  align-self: flex-end;
+  margin-top: auto;
+  transition: color 0.15s;
+}
+.low-stock-widget:hover .low-stock-cta {
+  color: var(--led);
+}
+
+/* ---------- Adaptações do PeripheralsModal pro novo formato ---------- */
+
+.periph-row {
+  display: grid !important;
+  grid-template-columns: 1fr 120px auto auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.periph-row__breakdown {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.periph-row__pill {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* Pills com cores semânticas (mesmas do donut) */
+.periph-row__pill--avail {
+  /* Verde discreto = "disponível" (mesma cor do toast.success).
+     Comunica imediato o significado sem precisar ler a legenda.
+     Coerente com a paleta semântica da plataforma. */
+  background: rgba(46, 163, 87, 0.18);
+  color: #2ea357;
+}
+.periph-row__pill--inuse {
+  background: rgba(194, 58, 58, 0.18);
+  color: var(--led);
+}
+.periph-row__pill--dmg {
+  background: rgba(216, 177, 90, 0.18);
+  color: #d8b15a;
+}
+
+/* Linha do modal em alerta crítico — destaque sutil à esquerda */
+.periph-row--alert {
+  box-shadow: inset 3px 0 0 #d8b15a;
+  padding-left: 6px !important;
+}
+
+/* =====================================================================
+   Legenda do PeripheralsModal — explica o significado dos pills
+   numéricos nas linhas. Posicionada entre o header e a lista.
+
+   Visual sutil propositalmente: educativa, não compete por atenção.
+   ===================================================================== */
+
+.periph-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  margin: 0 0 12px 0;
+  border-radius: 8px;
+  background: var(--bg-recess);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.periph-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.periph-legend__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Mesmas cores dos pills das linhas pra reforçar mapeamento visual */
+.periph-legend__dot--avail {
+  /* Verde semântico — coerente com o pill --avail e com o
+     toast.success da plataforma */
+  background: #2ea357;
+}
+.periph-legend__dot--inuse {
+  background: var(--led);
+}
+
+.periph-legend__sep {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+.periph-legend__item--total {
+  /* "Total" usa text-primary mais forte porque é o número destacado
+     nas linhas — coerência com o <strong className="periph-row__count"> */
+  color: var(--text-primary);
+}
+
+/* ====================================================================
+ * Distribution card — donut + breakdown
+ * ====================================================================
+ * Consistente com .category-card e .low-stock-widget: sólido com border
+ * sutil. Cancela completamente o estilo neumórfico herdado do .card. */
+
+.card.distribution-card {
+  box-shadow: none;
+  background: var(--bg-recess);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 22px 24px;
+  /* sem backdrop-filter — card sólido não precisa */
+}
+
+/* ---------- Linha 3: feed de movimentações recentes ---------- */
+
+.dashboard-feed-row {
+  margin-top: 20px;
+}

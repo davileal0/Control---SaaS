@@ -1,0 +1,302 @@
+/* =====================================================================
+   Activity Feed — feed de movimentações recentes (expansível)
+   ===================================================================== */
+
+.activity-feed {
+  background: var(--bg-recess);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 22px 24px;
+}
+
+.activity-feed__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.activity-feed__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Título com ícone de histórico à esquerda */
+.activity-feed__title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.activity-feed__title-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.activity-feed__see-all {
+  font: inherit;
+  font-size: 12px;
+  color: var(--brand-blue);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 130ms ease, color 130ms ease;
+}
+
+.activity-feed__see-all:hover {
+  background: color-mix(in srgb, var(--brand-blue) 10%, transparent);
+}
+
+.activity-feed__see-all:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+}
+
+.activity-feed__empty {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 8px 0;
+  padding: 16px 0;
+  text-align: center;
+}
+
+.activity-feed__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Linha do feed ---------- */
+
+.feed-row {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.feed-row:last-child {
+  border-bottom: none;
+}
+
+.feed-row__head {
+  display: grid;
+  grid-template-columns: 32px 1fr auto 16px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 8px;
+  margin: 0 -8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: background 130ms ease;
+}
+
+.feed-row__head:hover {
+  background: color-mix(in srgb, var(--brand-blue) 6%, transparent);
+}
+
+.feed-row__head:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: -2px;
+}
+
+/* Ícone do tipo de movimentação — círculo com cor tonal */
+.feed-row__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.feed-row__icon--assign {
+  background: color-mix(in srgb, #2ea357 14%, transparent);
+  color: #2ea357;
+}
+.feed-row__icon--return {
+  background: color-mix(in srgb, var(--brand-blue) 14%, transparent);
+  color: var(--brand-blue);
+}
+.feed-row__icon--repair {
+  background: color-mix(in srgb, #d8b15a 16%, transparent);
+  color: #d8b15a;
+}
+.feed-row__icon--neutral {
+  background: color-mix(in srgb, var(--text-secondary) 14%, transparent);
+  color: var(--text-secondary);
+}
+
+.feed-row__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.feed-row__text {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feed-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.feed-tag--assign {
+  background: color-mix(in srgb, #2ea357 14%, transparent);
+  color: color-mix(in srgb, #2ea357 55%, var(--text-primary));
+}
+.feed-tag--return {
+  background: color-mix(in srgb, var(--brand-blue) 14%, transparent);
+  color: color-mix(in srgb, var(--brand-blue) 55%, var(--text-primary));
+}
+.feed-tag--repair {
+  background: color-mix(in srgb, #d8b15a 16%, transparent);
+  color: color-mix(in srgb, #d8b15a 55%, var(--text-primary));
+}
+.feed-tag--neutral {
+  background: color-mix(in srgb, var(--text-secondary) 14%, transparent);
+  color: var(--text-secondary);
+}
+
+.feed-row__dept {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.feed-row__voided-tag {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--led);
+  background: color-mix(in srgb, var(--led) 12%, transparent);
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.feed-row__time {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.feed-row__chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: transform 180ms ease;
+}
+
+.feed-row__chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Linha anulada — riscada e esmaecida */
+.feed-row--voided .feed-row__text {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* ---------- Detalhe expandido ---------- */
+
+.feed-row__detail {
+  padding: 4px 8px 16px 52px;
+  animation: feed-detail-in 180ms ease;
+}
+
+@keyframes feed-detail-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.feed-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 24px;
+  margin: 0;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--brand-blue) 4%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+
+@media (max-width: 600px) {
+  .feed-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .feed-row__detail {
+    padding-left: 8px;
+  }
+}
+
+.feed-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.feed-detail-item dt {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.feed-detail-item dd {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin: 0;
+  word-break: break-word;
+}
+
+/* ---------- Modal "Ver todas" ---------- */
+
+.feed-modal {
+  max-width: 640px;
+  width: 100%;
+}
+
+.feed-modal__body {
+  margin-top: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}

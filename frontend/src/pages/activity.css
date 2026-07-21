@@ -1,0 +1,324 @@
+/* =====================================================================
+   Painel de Atividade dos Operadores
+   Reusa .card, .btn, .eyebrow e as vars de tema. Animação só por opacity
+   (respeita prefers-reduced-motion e a sensibilidade a movimento).
+   ===================================================================== */
+
+.activity-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.activity-period {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+}
+
+.activity-period__chip {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.activity-period__chip:hover {
+  opacity: 0.85;
+}
+
+.activity-period__chip--on {
+  background: var(--brand-blue);
+  color: #fff;
+}
+
+.activity-error {
+  background: color-mix(in srgb, var(--led) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--led) 40%, transparent);
+  color: var(--led);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.activity-empty {
+  padding: 24px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* --- Grade de cards de operador --- */
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.activity-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+.activity-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.activity-card__name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.activity-card__role {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.activity-card__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+}
+
+.activity-card__total strong {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--brand-blue);
+}
+
+:root[data-theme='dark'] .activity-card__total strong {
+  color: #6ba5f7;
+}
+
+.activity-card__total span {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Sparkline */
+.activity-spark {
+  display: block;
+}
+
+.activity-spark__bar {
+  fill: var(--brand-blue);
+  opacity: 0.55;
+}
+
+:root[data-theme='dark'] .activity-spark__bar {
+  fill: #6ba5f7;
+}
+
+.activity-spark--empty {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Contagem por tipo */
+.activity-card__types {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.activity-card__types li {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.activity-card__type-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.activity-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.activity-card__last {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* --- Drawer do extrato individual --- */
+.activity-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--modal-backdrop-bg);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  display: flex;
+  justify-content: flex-end;
+  animation: activity-fade 0.15s ease;
+}
+
+.activity-drawer {
+  width: min(440px, 100%);
+  height: 100%;
+  background: var(--glass-modal);
+  border-left: 1px solid var(--glass-modal-border);
+  padding: 22px;
+  overflow-y: auto;
+  animation: activity-fade 0.18s ease;
+}
+
+/* Animação SÓ de opacity — sem translate/movimento */
+@keyframes activity-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-drawer-backdrop,
+  .activity-drawer {
+    animation: none;
+  }
+}
+
+.activity-drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.activity-drawer__head h2 {
+  margin: 6px 0 2px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.activity-drawer__role {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Timeline de ações */
+.activity-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-timeline__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+}
+
+.activity-timeline__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.activity-timeline__asset {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-timeline__time {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Tags por tipo de ação — cor por categoria, sutil */
+.activity-tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+.activity-tag--cadastro {
+  background: color-mix(in srgb, #3b82f6 18%, transparent);
+  color: #3b82f6;
+}
+.activity-tag--atribuicao {
+  background: color-mix(in srgb, #22c55e 18%, transparent);
+  color: #16a34a;
+}
+.activity-tag--devolucao {
+  background: color-mix(in srgb, #eab308 20%, transparent);
+  color: #a16207;
+}
+.activity-tag--descarte {
+  background: color-mix(in srgb, #ef4444 16%, transparent);
+  color: #dc2626;
+}
+.activity-tag--outro {
+  background: var(--surface-hi);
+  color: var(--text-secondary);
+}
+
+:root[data-theme='dark'] .activity-tag--atribuicao {
+  color: #4ade80;
+}
+:root[data-theme='dark'] .activity-tag--devolucao {
+  color: #facc15;
+}
+:root[data-theme='dark'] .activity-tag--descarte {
+  color: #f87171;
+}
+
+/* Responsivo */
+@media (max-width: 640px) {
+  .activity-grid {
+    grid-template-columns: 1fr;
+  }
+  .activity-drawer {
+    width: 100%;
+  }
+}

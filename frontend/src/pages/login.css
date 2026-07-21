@@ -1,0 +1,348 @@
+/* =====================================================================
+   Tela de Login — layout centralizado, identidade "lobby"
+   ===================================================================== */
+
+.login-page {
+  position: relative;  /* permite posicionar o toggle absoluto */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  gap: 32px;
+
+  /* Gradient radial elaborado — agora 100% via variáveis CSS pra que o
+     tema claro possa redefinir todos os stops em bloco. */
+  background:
+    radial-gradient(ellipse 60% 30% at 50% 28%, rgba(255, 255, 255, 0.05) 0%, transparent 70%),
+    radial-gradient(
+      ellipse 90% 85% at 50% 42%,
+      var(--login-bg-1) 0%,
+      var(--login-bg-2) 32%,
+      var(--login-bg-3) 72%,
+      var(--login-bg-4) 100%
+    );
+}
+
+/* No tema claro, atenua o white-wash (já é tudo claro, não precisa
+   intensificar mais) e suaviza o gradient pra parecer "papel finíssimo"
+   em vez do contraste alto que faz sentido em dark mode. */
+[data-theme='light'] .login-page {
+  background:
+    radial-gradient(ellipse 70% 35% at 50% 30%, rgba(0, 0, 0, 0.025) 0%, transparent 70%),
+    radial-gradient(
+      ellipse 90% 85% at 50% 42%,
+      var(--login-bg-1) 0%,
+      var(--login-bg-2) 32%,
+      var(--login-bg-3) 72%,
+      var(--login-bg-4) 100%
+    );
+}
+
+/* Posicionamento do toggle de tema (canto superior direito da página) */
+.login-theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+}
+
+/* ---------- Brasão (BrandIcon + wordmark + eyebrow) ---------- */
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: login-fade-in 0.5s ease-out;
+}
+
+.login-brand__wordmark {
+  margin: 0;
+  font-size: 46px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-satin);
+  line-height: 1;
+  text-shadow:
+    0 0 1px rgba(255, 255, 255, 0.55),
+    0 0 18px rgba(255, 255, 255, 0.10);
+}
+/* Em tema claro, brilho branco no texto preto fica feio. Remove. */
+[data-theme='light'] .login-page .login-brand__wordmark {
+  text-shadow: none;
+}
+.login-brand__con { font-weight: 500; }
+.login-brand__trol { font-weight: 600; }
+
+.login-brand__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ---------- Card central ---------- */
+
+.login-card {
+  width: min(440px, 100%);
+  padding: 32px 28px 28px;
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: login-fade-in 0.6s ease-out 0.05s both;
+}
+
+.login-card__head h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-primary);
+}
+.login-card__head p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* ---------- Botão Microsoft 365 (caminho principal) ---------- */
+
+.btn-microsoft {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 18px;
+
+  background: #ffffff;
+  color: #1a1a1a;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+
+  transition: transform 0.1s, box-shadow 0.15s, background 0.15s;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18),
+    0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.btn-microsoft:hover {
+  background: #f6f6f6;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.22),
+    0 6px 18px rgba(0, 0, 0, 0.42);
+}
+.btn-microsoft:active {
+  transform: translateY(1px);
+}
+.btn-microsoft:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.btn-microsoft:focus-visible {
+  outline: 2px solid var(--led);
+  outline-offset: 3px;
+}
+
+/* Em tema claro, o botão Microsoft (já branco) precisa de borda pra
+   não "sumir" no fundo claro. Também ajusta a sombra. */
+[data-theme='light'] .login-page .btn-microsoft {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+}
+[data-theme='light'] .login-page .btn-microsoft:hover {
+  background: #fafafa;
+  border-color: rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9),
+    0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- Divisor "Atalhos de desenvolvimento" ---------- */
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 -4px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--glass-border);
+}
+
+.login-dev-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* ---------- Botões de perfil (atalhos de dev) ---------- */
+
+.login-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-role {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 11px 14px;
+
+  background: var(--bg-recess);
+  box-shadow: var(--pressed);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary);
+
+  transition: border-color 0.15s, transform 0.1s;
+}
+.btn-role:hover {
+  border-color: rgba(255, 255, 255, 0.10);
+}
+.btn-role:active {
+  transform: translateY(1px);
+}
+.btn-role:focus-visible {
+  outline: 1px solid var(--led);
+  outline-offset: 2px;
+}
+
+.btn-role__label {
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-primary);
+}
+.btn-role__hint {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ---------- Footer ---------- */
+
+.login-footer {
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  animation: login-fade-in 0.7s ease-out 0.1s both;
+}
+
+/* ---------- Animação suave de entrada ---------- */
+
+@keyframes login-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-brand,
+  .login-card,
+  .login-footer {
+    animation: none;
+  }
+}
+
+/* =====================================================================
+   Overrides do tema CLARO específicos da tela de login
+   ---------------------------------------------------------------------
+   No light, a profundidade vem da diferença entre fundo cinza e peças
+   brancas elevadas, NÃO de glass translúcido.
+   ===================================================================== */
+
+/* Card no light: COMBO glass + sombra externa.
+   - As variáveis --glass-* (tokens.css) já fazem o card translúcido
+     e com blur, deixando o azul do fundo permear pelo branco.
+   - As sombras externas abaixo dão sensação de "vidro flutuando",
+     coerente com o resto da plataforma. */
+[data-theme='light'] .login-page .login-card {
+  box-shadow:
+    0 1px 2px rgba(40, 70, 130, 0.04),
+    0 8px 24px rgba(40, 70, 130, 0.07),
+    0 28px 56px rgba(40, 70, 130, 0.06);
+}
+
+/* Botões de papel: ELEVADOS (extrude), não pressed. Branco puro com
+   sombra externa sutil — convidam a clicar. */
+[data-theme='light'] .login-page .btn-role {
+  background: var(--surface-hi);
+  box-shadow:
+    2px 2px 6px var(--shadow-dark),
+    -2px -2px 6px var(--shadow-light);
+  border-color: transparent;
+}
+[data-theme='light'] .login-page .btn-role:hover {
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow:
+    3px 3px 9px var(--shadow-dark),
+    -3px -3px 9px var(--shadow-light);
+}
+[data-theme='light'] .login-page .btn-role:active {
+  transform: translateY(0);
+  /* No active, peça "afunda" pro efeito tátil */
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+}
+
+/* Divider mais sutil no claro: linha cinza muito leve no lugar do
+   glass-border (que ficaria invisível). */
+[data-theme='light'] .login-page .login-divider::before,
+[data-theme='light'] .login-page .login-divider::after {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Footer no claro: cinza médio (em vez de muted que fica apagado) */
+[data-theme='light'] .login-page .login-footer {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* Banner de erro de login SSO (conta não autorizada, sessão expirada) */
+.login-error {
+  background: color-mix(in srgb, var(--led) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--led) 40%, transparent);
+  color: var(--led);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-bottom: 16px;
+}

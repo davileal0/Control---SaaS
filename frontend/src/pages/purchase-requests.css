@@ -1,0 +1,303 @@
+/* =====================================================================
+   Página de Solicitações de Compra (SC)
+
+   Estética coerente com o resto da plataforma: glass sutil, sombras
+   suaves, paleta dessaturada. Cards de SC usam cor de status pra
+   sinalização rápida do estado do ciclo.
+   ===================================================================== */
+
+.pr-page {
+  padding: 28px 32px;
+  max-width: 1100px;
+}
+
+.pr-page__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.pr-page__head h1 {
+  margin: 4px 0 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---------------------------------------------------------------------
+   Filtros — chips de status + busca livre
+   --------------------------------------------------------------------- */
+
+.pr-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.pr-filters__chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-recess);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.pr-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.pr-chip--active {
+  background: var(--surface-hi);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.pr-chip__count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.pr-chip--active .pr-chip__count {
+  background: var(--bg-recess);
+  color: var(--text-secondary);
+}
+
+.pr-filters__search {
+  min-width: 280px;
+  flex: 1;
+  max-width: 360px;
+}
+
+/* ---------------------------------------------------------------------
+   Estados vazio / loading
+   --------------------------------------------------------------------- */
+
+.pr-loading,
+.pr-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 24px;
+}
+
+/* ---------------------------------------------------------------------
+   Lista + cards de SC
+   --------------------------------------------------------------------- */
+
+.pr-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pr-card {
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  border-left: 3px solid transparent;
+  transition: border-color 0.15s;
+}
+
+/* Sinalização lateral por status — leitura periférica do estado */
+.pr-card--AGUARDANDO_ABERTURA {
+  border-left-color: #d8b15a; /* amarelo atenção — esperando ação */
+}
+.pr-card--ABERTA {
+  border-left-color: #4a82d6; /* azul info — em curso */
+}
+.pr-card--FECHADA {
+  border-left-color: #2ea357; /* verde sucesso — concluída */
+  opacity: 0.85;
+}
+.pr-card--CANCELADA {
+  border-left-color: var(--text-muted); /* cinza neutro — descontinuada */
+  opacity: 0.75;
+}
+
+.pr-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pr-card__title h3 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Quantidade ao lado do alvo — peso secundário, sem competir
+   com o nome do equipamento mas legível à primeira vista. */
+.pr-card__quantity {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  margin-left: 2px;
+}
+
+.pr-card__kind {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Status pill — destaca o estado atual no canto direito */
+.pr-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+}
+.pr-status--AGUARDANDO_ABERTURA {
+  background: rgba(216, 177, 90, 0.18);
+  color: #d8b15a;
+}
+.pr-status--ABERTA {
+  background: rgba(74, 130, 214, 0.18);
+  color: #4a82d6;
+}
+.pr-status--FECHADA {
+  background: rgba(46, 163, 87, 0.18);
+  color: #2ea357;
+}
+.pr-status--CANCELADA {
+  background: var(--bg-recess);
+  color: var(--text-muted);
+}
+
+.pr-card__sc-number {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.pr-card__sc-number code {
+  font-family: var(--mono, ui-monospace, 'SF Mono', Menlo, monospace);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-recess);
+  padding: 1px 8px;
+  border-radius: 6px;
+}
+
+/* Timeline — autorizado / aberto / fechado em grid 3 colunas (responsivo) */
+.pr-card__timeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px 24px;
+  margin: 0 0 12px 0;
+  padding: 12px 14px;
+  background: var(--bg-recess);
+  border-radius: 8px;
+}
+
+.pr-card__timeline > div {
+  margin: 0;
+}
+
+.pr-card__timeline dt {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.pr-card__timeline dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.pr-card__role {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.pr-card__time {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-card__close-reason {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+}
+
+.pr-card__notes {
+  margin-bottom: 12px;
+}
+
+.pr-card__notes-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.pr-card__notes p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.pr-card__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 12px;
+}

@@ -1,0 +1,205 @@
+/* =====================================================================
+   Tela de Usuários — toolbar, tabela, badges de papel e status
+   ===================================================================== */
+
+.users-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 6px 0 18px;
+}
+
+.users-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 18px 4px;
+  text-align: center;
+}
+
+.users-card {
+  padding: 6px 0;
+  overflow: hidden;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  letter-spacing: var(--tracking-wide);
+}
+
+.users-table thead th {
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.users-table thead th.users-table__actions {
+  text-align: right;
+}
+
+.users-table tbody td {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+.users-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.users-row--inactive td {
+  color: var(--text-muted);
+}
+.users-row--inactive .users-email {
+  text-decoration: line-through;
+}
+
+.users-email {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+}
+
+.users-table__actions {
+  text-align: right;
+  white-space: nowrap;
+}
+.users-table__actions .log-action + .log-action {
+  margin-left: 12px;
+}
+
+/* ---------- Badge do papel (na coluna Papel da tabela) ---------- */
+.role-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.role-pill--OPERADOR_N1 {
+  color: #9ec8ff;
+  border-color: rgba(158, 200, 255, 0.32);
+  background: rgba(158, 200, 255, 0.07);
+}
+.role-pill--LIDER_N1 {
+  color: #d8b15a;
+  border-color: rgba(216, 177, 90, 0.32);
+  background: rgba(216, 177, 90, 0.07);
+}
+.role-pill--DIRETOR_TI {
+  color: #ff9aa0;
+  border-color: rgba(255, 154, 160, 0.32);
+  background: rgba(255, 154, 160, 0.07);
+}
+
+/* ---------- Status (Ativo/Inativo) ---------- */
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.status-dot::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.status-dot--on::before {
+  background: #6dd66d;
+  box-shadow: 0 0 8px rgba(109, 214, 109, 0.4);
+}
+.status-dot--off::before {
+  background: var(--text-muted);
+}
+.status-dot--off {
+  color: var(--text-muted);
+}
+
+/* =====================================================================
+   UserModal — radio group de papéis (cards selecionáveis)
+   ===================================================================== */
+
+.role-radio-group {
+  border: none;
+  padding: 0;
+  margin: 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.role-radio-group legend {
+  padding: 0;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.role-radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-recess);
+  box-shadow: var(--pressed);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: outline-color 0.15s;
+  outline: 1px solid transparent;
+}
+.role-radio:hover {
+  outline-color: rgba(255, 255, 255, 0.08);
+}
+.role-radio input[type='radio'] {
+  margin-top: 3px;
+  accent-color: var(--led);
+}
+.role-radio:has(input[type='radio']:checked) {
+  outline-color: var(--led);
+}
+
+.role-radio__content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.role-radio__title {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+}
+.role-radio__desc {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* ---------- Responsivo: tabela colapsa em telas estreitas ---------- */
+@media (max-width: 760px) {
+  .users-table thead {
+    display: none;
+  }
+  .users-table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .users-table tbody td {
+    padding: 0;
+    border: none;
+  }
+  .users-table__actions {
+    text-align: left !important;
+    padding-top: 6px !important;
+  }
+}

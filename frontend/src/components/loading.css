@@ -1,0 +1,155 @@
+/* =====================================================================
+   Sistema de loading e transições
+
+   1. Top progress bar — barra fina LED no topo durante requests
+   2. Spinner — SVG circular rotativo pra áreas específicas
+   3. Fade entre páginas — opacity 0→1 em troca de rota
+
+   Sensibilidade vestibular respeitada: TODAS as animações usam
+   apenas opacity ou translateX (sem zoom, escala, ou movimento Y
+   significativo). Não disparam gatilhos vestibulares.
+
+   prefers-reduced-motion respeitado no final do arquivo.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. Top progress bar
+   --------------------------------------------------------------------- */
+
+.top-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+  /* Inativo: 0 opacity. Some suavemente quando todos os requests
+     terminam, em vez de "piscar" abruptamente. */
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.top-progress--active {
+  opacity: 1;
+}
+
+/* A linha luminosa que percorre a barra. Pseudo-element pra deixar
+   a barra container limpa e permitir overflow:hidden no contêiner. */
+.top-progress::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Gradiente: transparente -> LED -> transparente.
+     Cria a sensação de "pulso de luz" deslizando. */
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--led) 20%,
+    var(--led) 50%,
+    var(--led) 80%,
+    transparent 100%
+  );
+  /* Width 35% pra ser uma "linha brilhante curta", não barra cheia.
+     Animação a percorre da esquerda pra direita em loop. */
+  width: 35%;
+  animation: top-progress-slide 1.3s ease-in-out infinite;
+}
+
+@keyframes top-progress-slide {
+  /* Começa fora da tela à esquerda */
+  0% {
+    transform: translateX(-100%);
+  }
+  /* Termina fora da tela à direita */
+  100% {
+    transform: translateX(calc(100vw / 0.35));
+    /* trick: como width=35% do viewport, 100% de translateX = 35% viewport.
+       Pra cobrir 100% + sair pelo lado direito, precisa de
+       (100vw / 35%) ≈ 285% da própria largura. */
+  }
+}
+
+/* ---------------------------------------------------------------------
+   2. Spinner
+   --------------------------------------------------------------------- */
+
+.spinner {
+  /* currentColor permite definir a cor via parent ou via prop color */
+  color: var(--text-muted);
+  /* 1.2s = ritmo sereno (não frenético, não lento demais) */
+  animation: spinner-rotate 1.2s linear infinite;
+  /* vertical-align fica melhor em linhas de texto */
+  vertical-align: middle;
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Helper pra centralizar spinner em área vazia (página, modal) */
+.spinner-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px;
+  color: var(--text-muted);
+  font-size: 13px;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* ---------------------------------------------------------------------
+   3. Fade entre páginas — aplicado em .content via key={current}
+
+   O React força remount do <main className="content"> quando o
+   prop key muda (=mudança de página). Animation roda no mount.
+
+   180ms é o sweet spot: percebível como "transição suave", mas
+   curto o suficiente pra não atrasar a interação.
+   --------------------------------------------------------------------- */
+
+.content {
+  animation: page-fade-in 180ms ease-out;
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   prefers-reduced-motion — desliga as animações pra quem prefere
+   menos movimento, mas mantém o feedback visual essencial
+   --------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Top progress: sem deslizar, apenas pulso de opacidade */
+  .top-progress::before {
+    animation: top-progress-pulse 1.5s ease-in-out infinite;
+    width: 100%;
+  }
+
+  @keyframes top-progress-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* Spinner: sem rotação contínua, mantém o visual estático */
+  .spinner {
+    animation: none;
+  }
+
+  /* Fade entre páginas: instantâneo */
+  .content {
+    animation: none;
+  }
+}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Control — Gestão de Ativos N1</title>
+    <script>
+      // Aplica tema e intensidade do vidro ANTES do React montar, pra
+      // não haver flash visual (FOUC) ao carregar. Lê as mesmas chaves
+      // de localStorage que lib/theme.ts e lib/glass.ts usam.
+      (function () {
+        try {
+          var t = localStorage.getItem('control-theme');
+          if (t === 'dark' || t === 'light') {
+            document.documentElement.setAttribute('data-theme', t);
+          }
+          var g = localStorage.getItem('control-glass');
+          if (g === 'solido' || g === 'medio' || g === 'vidro') {
+            document.documentElement.setAttribute('data-glass', g);
+          }
+        } catch (e) {
+          /* localStorage indisponível — ignora, usa defaults do CSS */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

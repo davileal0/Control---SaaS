@@ -1,0 +1,342 @@
+// =====================================================================
+// Control — Modelagem de dados (Prisma / PostgreSQL)
+// =====================================================================
+// Decisões de modelagem derivadas da especificação:
+//  - `serial_number` é a chave de negócio e a PK de `assets`.
+//  - `movement_logs` é uma tabela APPEND-ONLY (imutável). A imutabilidade
+//    é garantida no banco por triggers (ver migrations/0001_init), não
+//    apenas pela aplicação — auditoria não pode depender de boa-fé do app.
+//  - Periféricos NÃO têm subcategoria: a diferenciação é feita pelo
+//    campo livre `model` dentro da categoria macro `Periferico`.
+//  - Descarte é exclusão lógica (`is_archived`), nunca DELETE físico.
+// =====================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Categorias macro de ativo. Periféricos ficam todos em `Periferico`;
+/// a granularidade (Mouse, Teclado, Mochila...) vive em `Asset.model`.
+enum Category {
+  Notebook
+  Desktop
+  Celular
+  AllInOne   @map("all_in_one")
+  Periferico
+}
+
+/// Estados operacionais visíveis na UI. O "descartado" NÃO é um status:
+/// é a flag `is_archived`, ortogonal ao status, para preservar o último
+/// estado conhecido do ativo no momento do arquivamento.
+enum AssetStatus {
+  Disponivel
+  EmUso       @map("em_uso")
+  Danificado
+}
+
+/// Papéis internos de TI (RBAC). Nenhum outro setor tem conta.
+enum Role {
+  OPERADOR_N1
+  LIDER_N1
+  DIRETOR_TI
+}
+
+/// Tipo de correção aplicada a um lançamento de movimentação.
+enum CorrectionOperation {
+  EDIT   // edição de campos de um lançamento existente
+  VOID   // remoção lógica (anulação) de um lançamento lançado por engano
+}
+
+model Asset {
+  serialNumber String      @id @map("serial_number")
+  model        String
+  category     Category
+  status       AssetStatus @default(Disponivel)
+  isArchived   Boolean     @default(false) @map("is_archived")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  movementLogs MovementLog[]
+
+  // Consultas quentes do dashboard filtram por status e arquivamento,
+  // e agrupam estoque por (category, model).
+  @@index([status, isArchived])
+  @@index([category, model])
+  @@map("assets")
+}
+
+model MovementLog {
+  id                 Int          @id @default(autoincrement())
+  assetSerialNumber  String       @map("asset_serial_number")
+  originStatus       AssetStatus? @map("origin_status") // nulo na ingestão inicial
+  destinationStatus  AssetStatus  @map("destination_status")
+
+  ticketId      String? @map("ticket_id")      // chamado no Acelerato
+  endUserName   String? @map("end_user_name")  // colaborador final
+  managerName   String? @map("manager_name")   // líder direto do colaborador
+  department    String?                         // setor de destino
+  invoiceNumber String? @map("invoice_number") // NF (devoluções entre unidades)
+  trackingCode  String? @map("tracking_code")  // rastreio dos Correios/transportadora
+  notes         String? @db.Text                // justificativas / detalhes de descarte
+
+  // Motivo da atribuição — só preenchido quando o log é uma atribuição
+  // a colaborador (transição → EmUso). Nullable porque outras transições
+  // (devolução, dano, descarte, etc) não usam.
+  // Esta categoria alimenta KPIs como "este mês: N aumentos de quadro
+  // vs M substituições".
+  assignmentReason AssignmentReason? @map("assignment_reason")
+
+  // Correção: o lançamento pode ser editado ou removido (no caso de
+  // engano), mas NUNCA é apagado fisicamente. "Remoção" = anulação lógica
+  // (isVoided). Cada mudança gera um registro imutável em corrections.
+  isVoided   Boolean   @default(false) @map("is_voided")
+  voidedAt   DateTime? @map("voided_at")
+
+  // Autor da ação — quem fez o cadastro/movimentação/descarte. Nullable
+  // porque logs criados ANTES da captura de autor (Fase 1 do painel de
+  // atividade) não têm essa informação e não há como reconstruí-la.
+  // A partir da captura, toda ação nova é atribuída ao operador logado
+  // (via req.user, que vem do JWT do SSO). Alimenta o Painel de Atividade.
+  actorUserId String? @map("actor_user_id")
+  actorName   String? @map("actor_name")
+  actorRole   Role?   @map("actor_role")
+
+  timestamp DateTime @default(now())
+
+  asset       Asset                  @relation(fields: [assetSerialNumber], references: [serialNumber], onDelete: Restrict, onUpdate: Restrict)
+  corrections MovementLogCorrection[]
+
+  @@index([assetSerialNumber, timestamp])
+  @@index([isVoided])
+  @@index([actorUserId, timestamp]) // consultas do painel de atividade por operador
+  @@map("movement_logs")
+}
+
+/// Trilha de correções — ESTA tabela é append-only e imutável (triggers
+/// no banco bloqueiam UPDATE/DELETE). A imutabilidade migrou para cá:
+/// o lançamento operacional é corrigível, mas o histórico de quem
+/// corrigiu, o quê, e por quê, é inviolável e fica disponível aos
+/// supervisores (líderes e acima).
+model MovementLogCorrection {
+  id            Int                 @id @default(autoincrement())
+  movementLogId Int                 @map("movement_log_id")
+  operation     CorrectionOperation
+  reason        String              @db.Text // justificativa OBRIGATÓRIA
+
+  /// Diff campo-a-campo no formato { campo: { before, after } } (apenas EDIT).
+  changes Json? @db.JsonB
+
+  // Autor da correção: SEMPRE derivado da identidade autenticada (SSO),
+  // nunca aceito do corpo da requisição.
+  actorUserId String @map("actor_user_id")
+  actorName   String @map("actor_name")
+  actorRole   Role   @map("actor_role")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  movementLog MovementLog @relation(fields: [movementLogId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([movementLogId, createdAt])
+  @@index([createdAt]) // feed de revisão dos supervisores
+  @@map("movement_log_corrections")
+}
+
+/// Componente de equipamentos descartados — alimentado no descarte e
+/// projetado para exportação direta em planilha ("Planilha de
+/// equipamentos descartados"). Guarda um SNAPSHOT (serial, modelo,
+/// categoria, último status) para que a planilha permaneça fiel mesmo
+/// que o cadastro do ativo mude depois.
+model DiscardRecord {
+  id           Int         @id @default(autoincrement())
+  serialNumber String      @map("serial_number")
+  model        String
+  category     Category
+  lastStatus   AssetStatus @map("last_status") // status no momento do descarte
+  reason       String      @db.Text
+
+  discardedByUserId String   @map("discarded_by_user_id")
+  discardedByName   String   @map("discarded_by_name")
+  discardedAt       DateTime @default(now()) @map("discarded_at")
+
+  @@index([discardedAt])
+  @@index([lastStatus])
+  @@map("discard_records")
+}
+
+/// Usuários internos. A autenticação real deve ser delegada ao SSO
+/// corporativo (ver middleware/auth.ts). Esta tabela guarda apenas a
+/// associação identidade -> papel para autorização (RBAC).
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  fullName  String   @map("full_name")
+  role      Role
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+// =====================================================================
+// Solicitações de Compra (SC)
+// =====================================================================
+// Quando o estoque de algum item (categoria ou model de periférico)
+// cai abaixo do threshold (25 unidades), um alerta crítico aparece
+// no Dashboard. Pra "apaziguar" esse alerta — sem perder o sinal —
+// um Líder ou Diretor autoriza uma SC, e Heryck (Operador N1) registra
+// o número quando abrir a SC no sistema da Unifique.
+
+enum PurchaseRequestStatus {
+  AGUARDANDO_ABERTURA // Líder autorizou, esperando Heryck abrir no sistema
+  ABERTA              // Heryck registrou o número; equipamentos em compra
+  FECHADA             // Auto (estoque normalizou) OU manual (recebimento)
+  CANCELADA           // Cancelada antes de virar ABERTA
+}
+
+enum PurchaseRequestTargetKind {
+  CATEGORY          // alvo = Notebook | Celular | AllInOne
+  PERIPHERAL_MODEL  // alvo = "Mouse" | "Teclado" | "Headset" (literal do model)
+}
+
+enum PurchaseRequestCloseReason {
+  STOCK_NORMALIZED  // auto-fecha em AGUARDANDO_ABERTURA quando estoque > 25
+  MANUAL            // alguém fechou manualmente (recebimento)
+  CANCELED          // cancelada antes da abertura
+}
+
+model PurchaseRequest {
+  id String @id @default(uuid())
+
+  // Alvo da compra — combo (kind, value)
+  // kind=CATEGORY:         value é Notebook | Celular | AllInOne
+  // kind=PERIPHERAL_MODEL: value é o model literal (ex: "Mouse")
+  targetKind  PurchaseRequestTargetKind @map("target_kind")
+  targetValue String                    @map("target_value")
+
+  // Quantidade de unidades a serem compradas. Sempre > 0.
+  // Dado operacional crítico — sem isso fica impossível medir
+  // volume de compras, KPIs (média de unidades/SC), etc.
+  quantity Int
+
+  // Modelo específico do equipamento a ser comprado (ex: "Dell Latitude
+  // 3420"). Informado na ABERTURA da S.C. (Opção 1). Só se aplica a
+  // S.C. de EQUIPAMENTO (targetKind=CATEGORY) — pra periférico é null,
+  // já que targetValue JÁ é o modelo (ex: "Mouse"). No fechamento, este
+  // modelo é herdado por todos os ativos criados a partir das SNs.
+  equipmentModel String? @map("equipment_model")
+
+  status PurchaseRequestStatus @default(AGUARDANDO_ABERTURA)
+
+  // Autorização (Líder ou Diretor)
+  authorizedByUserId String   @map("authorized_by_user_id")
+  authorizedByName   String   @map("authorized_by_name")
+  authorizedByRole   Role     @map("authorized_by_role")
+  authorizedAt       DateTime @default(now()) @map("authorized_at")
+
+  // Abertura (geralmente Heryck — Operador N1). Preenchidos no PATCH /open
+  scNumber       String?   @map("sc_number")
+  openedByUserId String?   @map("opened_by_user_id")
+  openedByName   String?   @map("opened_by_name")
+  openedByRole   Role?     @map("opened_by_role")
+  openedAt       DateTime? @map("opened_at")
+
+  // Fechamento (auto ou manual). Preenchidos no PATCH /close
+  closedByUserId String?                     @map("closed_by_user_id")
+  closedByName   String?                     @map("closed_by_name")
+  closedByRole   Role?                       @map("closed_by_role")
+  closedAt       DateTime?                   @map("closed_at")
+  closeReason    PurchaseRequestCloseReason? @map("close_reason")
+
+  // Observações livres
+  notes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Índice composto pra busca de "SC ativa pra esse alvo" (usado pelo
+  // auto-close e pra mostrar status nos alertas do Dashboard)
+  @@index([targetKind, targetValue, status])
+  @@map("purchase_requests")
+}
+
+// =====================================================================
+// Motivo da atribuição (categorização operacional)
+// =====================================================================
+// Decisão de design: apenas 2 valores (binário). Pra alta administração
+// importa o VOLUME de aumentos vs substituições — o motivo específico
+// da substituição (dano/upgrade/saída) fica sob responsabilidade do
+// líder que autoriza. Aprovar o quê é decisão hierárquica, registrar é
+// dever operacional.
+enum AssignmentReason {
+  AUMENTO_QUADRO  // nova contratação — equipamento sai do estoque pra colaborador novo
+  SUBSTITUICAO    // colaborador já tinha equipamento (anterior foi devolvido/quebrado/etc)
+}
+
+// =====================================================================
+// Trilha de auditoria de ACESSOS (gestão de usuários / RBAC)
+// =====================================================================
+enum AccessAction {
+  CREATE
+  ROLE_CHANGE
+  DEACTIVATE
+  REACTIVATE
+}
+
+model AccessLog {
+  id     Int          @id @default(autoincrement())
+  action AccessAction
+
+  targetUserId String @map("target_user_id")
+  targetEmail  String @map("target_email")
+
+  changes Json? @db.JsonB
+
+  actorUserId String @map("actor_user_id")
+  actorName   String @map("actor_name")
+  actorRole   Role   @map("actor_role")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([targetUserId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@map("access_logs")
+}
+
+enum InventoryImportStatus {
+  PENDENTE
+  APROVADO
+  RECUSADO
+}
+
+model InventoryImport {
+  id     Int                   @id @default(autoincrement())
+  status InventoryImportStatus @default(PENDENTE)
+
+  autentiqueLink String @map("autentique_link")
+
+  validatedAssets Json @map("validated_assets") @db.JsonB
+  totalAssets     Int  @map("total_assets")
+
+  submittedByUserId String   @map("submitted_by_user_id")
+  submittedByName   String   @map("submitted_by_name")
+  submittedByRole   Role     @map("submitted_by_role")
+  submittedAt       DateTime @default(now()) @map("submitted_at")
+
+  resolvedByUserId String?   @map("resolved_by_user_id")
+  resolvedByName   String?   @map("resolved_by_name")
+  resolvedByRole   Role?     @map("resolved_by_role")
+  resolvedAt       DateTime? @map("resolved_at")
+
+  rejectionReason String? @map("rejection_reason")
+
+  createdCount Int?  @map("created_count")
+  skippedItems Json? @map("skipped_items") @db.JsonB
+
+  @@index([status, submittedAt])
+  @@map("inventory_imports")
+}
+
+

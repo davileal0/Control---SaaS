@@ -1,0 +1,53 @@
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 2px;
+}
+
+.logo__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.logo__word {
+  font-size: 22px;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-satin);
+  /* micro-brilho sutil nas bordas externas do branco-acetinado */
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.55),
+               0 0 10px rgba(255, 255, 255, 0.12);
+  line-height: 1;
+}
+
+/* Em tema claro, brilho branco sobre texto escuro fica errado. Remove. */
+[data-theme='light'] .logo__word {
+  text-shadow: none;
+}
+
+.logo__con { font-weight: 500; }   /* Regular/Medium */
+.logo__trol { font-weight: 600; }  /* Semi-Bold */
+
+.logo__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+/* Pulso do LED no ícone — sinal de radar ATIVO, ciclo ~2.4s */
+.led-pulse {
+  animation: led-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes led-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .led-pulse { animation: none; }
+}

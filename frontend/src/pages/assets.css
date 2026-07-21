@@ -1,0 +1,220 @@
+/* =====================================================================
+   Página Ativos — toolbar de filtros, tabela densa de inventário.
+   Pílulas (.pill) e .timeline são reaproveitadas de audit.css para
+   manter consistência visual entre Ativos e Auditoria.
+   ===================================================================== */
+
+/* ---------- Toolbar (filtros + ações) ---------- */
+.assets-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.assets-filters {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* Pílulas de status (filtro) — neumórficas, "carimbadas" quando ativas */
+.filter-group {
+  display: inline-flex;
+  background: var(--bg-recess);
+  box-shadow: var(--pressed);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+.filter-pill {
+  font: inherit;
+  letter-spacing: var(--tracking-wide);
+  font-size: 13px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.filter-pill:hover { color: var(--text-secondary); }
+.filter-pill--on {
+  color: var(--text-satin);
+  background: linear-gradient(145deg, var(--surface-hi), var(--surface));
+  box-shadow: var(--extrude-sm);
+}
+.filter-pill:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
+
+/* Select de categoria — rebaixado para combinar com inputs */
+.filter-select {
+  font: inherit;
+  letter-spacing: var(--tracking-wide);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-recess);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--pressed);
+  padding: 10px 14px;
+  cursor: pointer;
+  min-width: 160px;
+}
+.filter-select:focus-visible { outline: none; border-color: var(--led-soft); }
+
+.assets-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.assets-search { min-width: 280px; }
+
+/* ---------- Lista (card que envolve a tabela) ---------- */
+.assets-list {
+  padding: 0;
+  overflow: hidden;
+}
+
+.assets-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.assets-table thead th {
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.assets-table tbody td {
+  padding: 14px 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  vertical-align: middle;
+}
+.assets-table tbody tr:last-child td { border-bottom: none; }
+
+.assets-row {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.assets-row:hover td { background: rgba(255, 255, 255, 0.025); }
+.assets-row:focus-visible {
+  outline: none;
+}
+.assets-row:focus-visible td { background: rgba(255, 255, 255, 0.04); }
+.assets-row:focus-visible td:first-child {
+  box-shadow: inset 3px 0 0 var(--led);
+}
+
+/* Pílulas de status dentro da tabela: ligeiramente menores que no header */
+.assets-table .pill {
+  font-size: 11px;
+  padding: 4px 11px;
+}
+
+.cell-model { color: var(--text-primary); font-weight: 500; }
+.cell-serial code {
+  color: var(--text-primary);
+  letter-spacing: 0.06em;
+  font-size: 13px;
+}
+.cell-loc { color: var(--text-secondary); }
+
+.assets-empty {
+  padding: 36px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* ---------- Responsivo: filtros empilham, busca cresce ---------- */
+@media (max-width: 900px) {
+  .assets-toolbar { flex-direction: column; align-items: stretch; }
+  .assets-actions { flex-direction: column; align-items: stretch; }
+  .assets-search { min-width: 0; width: 100%; }
+}
+
+/* ====================================================================
+ * Agrupamento de periféricos
+ * ==================================================================== */
+
+/* Linha agregada (clicável pra expandir) */
+.assets-row--group {
+  cursor: pointer;
+  background: var(--bg-recess);
+}
+
+.assets-row--group:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-recess));
+}
+
+.assets-row--group:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* Pill neutra com a contagem (sem cor de status, é um grupo) */
+.pill--group {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  background: color-mix(in srgb, var(--text-primary) 14%, transparent);
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 22%, transparent);
+}
+
+/* Chevron de expansão na coluna Modelo */
+.group-chevron {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  transition: transform 160ms ease;
+  transform: rotate(0deg);
+  width: 12px;
+  text-align: center;
+}
+
+.group-chevron--open {
+  transform: rotate(90deg);
+}
+
+/* Linhas individuais DENTRO de um grupo expandido — visual sutil de
+   "filho" pra não confundir com não-periféricos */
+.assets-row--group-item {
+  background: color-mix(in srgb, var(--bg-recess) 50%, transparent);
+}
+
+.assets-row--group-item .cell-model {
+  padding-left: 20px;
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+.assets-row--group-item .cell-serial code {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+
+.group-indent {
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}

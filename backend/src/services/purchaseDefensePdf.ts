@@ -194,6 +194,52 @@ function categorySection(
     },
   );
 
+  // Atribuições por intenção — o que sustenta a defesa pra diretoria.
+  // Ex: "200 das 300 atribuições de Celulares foram Upgrade IFS".
+  if (s.assignments.total > 0 && s.assignments.byIntent.length > 0) {
+    const reasonLabel = (r: 'AUMENTO_QUADRO' | 'SUBSTITUICAO') =>
+      r === 'AUMENTO_QUADRO' ? 'Aumento de quadro' : 'Substituição';
+
+    subTitle(doc, `Atribuições por intenção — ${s.label}`);
+    paragraph(
+      doc,
+      `No período foram ${s.assignments.total} atribuição(ões) de ${s.label}, ` +
+        `das quais ${s.assignments.withIntent} com intenção registrada. ` +
+        `O detalhamento abaixo sustenta a necessidade de reposição.`,
+    );
+    styledTable(
+      doc,
+      [
+        { label: 'Intenção', key: 'intent', w: 40, align: 'left' },
+        { label: 'Motivo', key: 'reason', w: 26, align: 'left' },
+        { label: 'Qtd.', key: 'qtd', w: 12, align: 'center' },
+        { label: '% do total', key: 'pct', w: 20, align: 'center' },
+      ],
+      s.assignments.byIntent.map((i) => ({
+        intent: i.detail,
+        reason: reasonLabel(i.reason),
+        qtd: String(i.count),
+        pct: `${i.pct.toFixed(1)}%`,
+      })),
+      {
+        intent: 'COM INTENÇÃO REGISTRADA',
+        reason: '',
+        qtd: String(s.assignments.withIntent),
+        pct: `${((s.assignments.withIntent / s.assignments.total) * 100).toFixed(1)}%`,
+      },
+    );
+
+    const top = s.assignments.byIntent[0];
+    calloutBox(
+      doc,
+      'Destaque:',
+      `${top.count} de ${s.assignments.total} atribuições de ${s.label} ` +
+        `(${top.pct.toFixed(0)}%) foram para "${top.detail}" — demanda concreta ` +
+        `que justifica a aquisição.`,
+      'info',
+    );
+  }
+
   // Último lote (contexto KACE)
   if (s.lastBatchQuantity > 0) {
     calloutBox(

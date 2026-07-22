@@ -58,6 +58,19 @@ export interface DefenseCategorySection {
     byReason: { reason: string; count: number }[];
   };
 
+  // Atribuições do período por INTENÇÃO (sub-categoria). É o que justifica
+  // a compra pra diretoria: "X das Y atribuições foram Upgrade IFS".
+  assignments: {
+    total: number; // total de atribuições (→EmUso) da categoria no período
+    withIntent: number; // quantas tinham intenção preenchida
+    byIntent: {
+      reason: 'AUMENTO_QUADRO' | 'SUBSTITUICAO';
+      detail: string;
+      count: number;
+      pct: number; // % sobre o total de atribuições
+    }[];
+  };
+
   // --- Informado pelo usuário ---
   suggestedQuantity: number;
   queue: {
@@ -138,28 +151,50 @@ async function buildCategorySection(
 ): Promise<DefenseCategorySection> {
   const category = input.category;
 
-  const [stockGroups, discardRecords] = await Promise.all([
-    // Saldo atual: agrupa por status (só ativos não-arquivados)
-    prisma.asset.groupBy({
-      by: ['status'],
-      where: { category, isArchived: false },
-      _count: { status: true },
-    }),
-    // Descartes no período
-    prisma.discardRecord.findMany({
-      where: {
-        category,
-        discardedAt: { gte: periodStart, lte: periodEndInclusive },
-      },
-      select: {
-        serialNumber: true,
-        model: true,
-        reason: true,
-        discardedAt: true,
-      },
-      orderBy: { discardedAt: 'desc' },
-    }),
-  ]);
+  const [stockGroups, discardRecords, assignmentsTotal, intentGroups] =
+    await Promise.all([
+      // Saldo atual: agrupa por status (só ativos não-arquivados)
+      prisma.asset.groupBy({
+        by: ['status'],
+        where: { category, isArchived: false },
+        _count: { status: true },
+      }),
+      // Descartes no período
+      prisma.discardRecord.findMany({
+        where: {
+          category,
+          discardedAt: { gte: periodStart, lte: periodEndInclusive },
+        },
+        select: {
+          serialNumber: true,
+          model: true,
+          reason: true,
+          discardedAt: true,
+        },
+        orderBy: { discardedAt: 'desc' },
+      }),
+      // Total de atribuições (→ EmUso) da categoria no período
+      prisma.movementLog.count({
+        where: {
+          asset: { category },
+          destinationStatus: 'EmUso',
+          isVoided: false,
+          timestamp: { gte: periodStart, lte: periodEndInclusive },
+        },
+      }),
+      // Atribuições com intenção preenchida, agrupadas por motivo+intenção
+      prisma.movementLog.groupBy({
+        by: ['assignmentReason', 'assignmentReasonDetail'],
+        where: {
+          asset: { category },
+          destinationStatus: 'EmUso',
+          isVoided: false,
+          assignmentReasonDetail: { not: null },
+          timestamp: { gte: periodStart, lte: periodEndInclusive },
+        },
+        _count: { _all: true },
+      }),
+    ]);
 
   const stockBy = (status: 'Disponivel' | 'EmUso' | 'Danificado') =>
     stockGroups.find(
@@ -179,6 +214,34 @@ async function buildCategorySection(
   const byReason = Array.from(reasonMap.entries())
     .map(([reason, count]) => ({ reason, count }))
     .sort((a, b) => b.count - a.count);
+
+  // Atribuições por intenção (% sobre o total de atribuições do período)
+  const byIntent = intentGroups
+    .map(
+      (g: {
+        assignmentReason: 'AUMENTO_QUADRO' | 'SUBSTITUICAO' | null;
+        assignmentReasonDetail: string | null;
+        _count: { _all: number };
+      }) => ({
+        reason: g.assignmentReason,
+        detail: g.assignmentReasonDetail ?? '',
+        count: g._count._all,
+        pct: assignmentsTotal > 0 ? (g._count._all / assignmentsTotal) * 100 : 0,
+      }),
+    )
+    .filter(
+      (
+        g,
+      ): g is {
+        reason: 'AUMENTO_QUADRO' | 'SUBSTITUICAO';
+        detail: string;
+        count: number;
+        pct: number;
+      } => g.reason !== null && g.detail.length > 0,
+    )
+    .sort((a, b) => b.count - a.count);
+
+  const withIntent = byIntent.reduce((sum, i) => sum + i.count, 0);
 
   const queueTotal = input.queueNewHires + input.queueReplacement;
   const composedTotal = queueTotal + input.safetyStockQuantity;
@@ -206,6 +269,11 @@ async function buildCategorySection(
         discardedAt: d.discardedAt,
       })),
       byReason,
+    },
+    assignments: {
+      total: assignmentsTotal,
+      withIntent,
+      byIntent,
     },
     suggestedQuantity: input.suggestedQuantity,
     queue: {

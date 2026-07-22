@@ -105,6 +105,8 @@ export const transitionSchema = z
     // Motivo da atribuição: obrigatório QUANDO destinationStatus = EmUso.
     // Validado via refine abaixo. Pra outras transições é ignorado.
     assignmentReason: z.enum(['AUMENTO_QUADRO', 'SUBSTITUICAO']).optional(),
+    // Sub-categoria/intenção da atribuição (opcional). Ex: "Upgrade IFS".
+    assignmentReasonDetail: z.string().trim().max(120).optional(),
     // Periféricos entregues junto (opcional). Só faz sentido em EmUso.
     peripherals: z.array(peripheralDeliveryItemSchema).max(50).optional(),
   })
@@ -190,6 +192,8 @@ export const reassignSchema = z.object({
   assignmentReason: z.enum(['AUMENTO_QUADRO', 'SUBSTITUICAO'], {
     message: 'Motivo da atribuição obrigatório (Aumento de quadro ou Substituição).',
   }),
+  // Sub-categoria/intenção da nova atribuição (opcional).
+  assignmentReasonDetail: z.string().trim().max(120).optional(),
   notes: z.string().trim().max(2000).optional(),
   // Periféricos entregues junto do reaproveitamento (opcional).
   peripherals: z.array(peripheralDeliveryItemSchema).max(50).optional(),

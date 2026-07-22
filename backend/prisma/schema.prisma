@@ -90,6 +90,12 @@ model MovementLog {
   // vs M substituições".
   assignmentReason AssignmentReason? @map("assignment_reason")
 
+  // Sub-categoria/intenção da atribuição (texto normalizado, ex:
+  // "Upgrade IFS", "Migração Empresa X"). Opcional e só faz sentido
+  // junto de assignmentReason. Alimenta as estatísticas de defesa de
+  // compra e o detalhamento do KPI de atribuições.
+  assignmentReasonDetail String? @map("assignment_reason_detail")
+
   // Correção: o lançamento pode ser editado ou removido (no caso de
   // engano), mas NUNCA é apagado fisicamente. "Remoção" = anulação lógica
   // (isVoided). Cada mudança gera um registro imutável em corrections.

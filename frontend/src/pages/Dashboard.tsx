@@ -38,6 +38,7 @@ import {
   DirectorMetrics,
   PeripheralProjection,
   ActivityFeedItem,
+  AssignmentReasonsSummary,
 } from '../types/domain';
 import './dashboard.css';
 
@@ -347,6 +348,17 @@ function buildHealthChip(
   return { label: 'Tudo em ordem', intent: 'ok' };
 }
 
+/** Subtítulo do card "Atribuições no mês", com destaque da principal
+ *  intenção (sub-categoria) do período quando houver. */
+function assignmentsSubtitle(ar: AssignmentReasonsSummary): string {
+  if (ar.total === 0) return 'Sem atribuições neste mês';
+  const base =
+    `${ar.aumentoQuadro} aumento${ar.aumentoQuadro === 1 ? '' : 's'} · ` +
+    `${ar.substituicao} substituiç${ar.substituicao === 1 ? 'ão' : 'ões'}`;
+  const top = ar.topIntents[0];
+  return top ? `${base} · destaque: ${top.detail} (${top.count})` : base;
+}
+
 /** Movs hoje vs MÉDIA dos 6 dias anteriores. Retorna delta inteiro. */
 function calcMovementsDelta(sparkline: number[]): number {
   if (sparkline.length < 2) return 0;
@@ -526,11 +538,7 @@ function LeaderSection({ lMetrics, onNavigatePR }: LeaderSectionProps) {
           iconColor="#2ea357"
           label="Atribuições no mês"
           value={ar.total}
-          subtitle={
-            ar.total === 0
-              ? 'Sem atribuições neste mês'
-              : `${ar.aumentoQuadro} aumento${ar.aumentoQuadro === 1 ? '' : 's'} · ${ar.substituicao} substituiç${ar.substituicao === 1 ? 'ão' : 'ões'}`
-          }
+          subtitle={assignmentsSubtitle(ar)}
         />
         <IconKPI
           icon={<ShoppingBagIcon />}
@@ -598,11 +606,7 @@ function DirectorSection({
           iconColor="#2ea357"
           label="Atribuições no mês"
           value={ar.total}
-          subtitle={
-            ar.total === 0
-              ? 'Sem atribuições neste mês'
-              : `${ar.aumentoQuadro} aumento${ar.aumentoQuadro === 1 ? '' : 's'} · ${ar.substituicao} substituiç${ar.substituicao === 1 ? 'ão' : 'ões'}`
-          }
+          subtitle={assignmentsSubtitle(ar)}
         />
         <IconKPI
           icon={<ShoppingBagIcon />}

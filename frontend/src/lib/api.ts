@@ -134,9 +134,17 @@ export interface ReassignInput {
   department: string;
   /** Motivo da nova atribuição — obrigatório */
   assignmentReason: 'AUMENTO_QUADRO' | 'SUBSTITUICAO';
+  /** Sub-categoria/intenção da atribuição (opcional) */
+  assignmentReasonDetail?: string;
   notes?: string;
   /** Periféricos entregues junto (opcional) */
   peripherals?: PeripheralDelivery[];
+}
+
+// Sugestão de intenção para o autocomplete (detalhe + frequência).
+export interface AssignmentIntentSuggestion {
+  detail: string;
+  count: number;
 }
 
 // Diff de campos editáveis. Cada chave é opcional — só envia o que mudou.
@@ -229,6 +237,8 @@ export interface RegisterMovementInput {
   trackingCode?: string;
   /** Motivo da atribuição — obrigatório quando destinationStatus === 'EmUso' */
   assignmentReason?: 'AUMENTO_QUADRO' | 'SUBSTITUICAO';
+  /** Sub-categoria/intenção da atribuição (opcional) */
+  assignmentReasonDetail?: string;
   notes?: string;
   /** Periféricos entregues junto (só em atribuição, EmUso) */
   peripherals?: PeripheralDelivery[];
@@ -311,6 +321,10 @@ export const api = {
     ),
   peripheralTypeStock: () =>
     request<PeripheralTypeStock[]>('/assets/peripherals/stock'),
+  assignmentIntents: (reason?: 'AUMENTO_QUADRO' | 'SUBSTITUICAO') =>
+    request<AssignmentIntentSuggestion[]>(
+      `/assets/assignment-intents${reason ? `?reason=${reason}` : ''}`,
+    ),
   editMovement: (logId: number, input: EditLogInput) =>
     request<MovementLog>(
       `/assets/movements/${logId}`,

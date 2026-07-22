@@ -190,6 +190,8 @@ export async function registerMovement(
         // Só persiste se for transição pra EmUso (validado no Zod;
         // garantia extra aqui pra não poluir outros logs).
         assignmentReason: to === 'EmUso' ? input.assignmentReason : null,
+        assignmentReasonDetail:
+          to === 'EmUso' ? input.assignmentReasonDetail || null : null,
         actorUserId: actor.id,
         actorName: actor.name,
         actorRole: actor.role,
@@ -445,6 +447,7 @@ export async function reassignAsset(
         department: input.department,
         // Só a nova atribuição carrega o motivo; a devolução não.
         assignmentReason: input.assignmentReason,
+        assignmentReasonDetail: input.assignmentReasonDetail || null,
         notes: combineNotes(
           `[REUTILIZAÇÃO] Reaproveitamento da máquina anteriormente em uso ` +
             `por ${previousUserLabel}${extraNotes}`,
@@ -462,4 +465,33 @@ export async function reassignAsset(
 
     return { returnLog, newAssignmentLog };
   });
+}
+
+/**
+ * Sugestões de intenção (sub-categoria) já usadas, para o autocomplete do
+ * painel. Opcionalmente filtradas pelo motivo principal, e ordenadas por
+ * frequência (as mais usadas primeiro). Considera só atribuições válidas
+ * (EmUso, não anuladas) com intenção preenchida.
+ */
+export async function getAssignmentIntentSuggestions(
+  reason?: 'AUMENTO_QUADRO' | 'SUBSTITUICAO',
+): Promise<{ detail: string; count: number }[]> {
+  const grouped = await prisma.movementLog.groupBy({
+    by: ['assignmentReasonDetail'],
+    where: {
+      destinationStatus: 'EmUso',
+      isVoided: false,
+      assignmentReasonDetail: { not: null },
+      ...(reason ? { assignmentReason: reason } : {}),
+    },
+    _count: { _all: true },
+  });
+
+  return grouped
+    .map((g: { assignmentReasonDetail: string | null; _count: { _all: number } }) => ({
+      detail: g.assignmentReasonDetail ?? '',
+      count: g._count._all,
+    }))
+    .filter((g: { detail: string }) => g.detail.length > 0)
+    .sort((a: { count: number }, b: { count: number }) => b.count - a.count);
 }

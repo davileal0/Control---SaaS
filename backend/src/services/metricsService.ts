@@ -273,15 +273,25 @@ export async function getActivePurchaseRequests(): Promise<ActivePurchaseRequest
 // Logs anteriores à migration 0006 têm assignmentReason = null e ficam
 // fora deste agregado por design (vide P2 do alinhamento).
 
+// Intenção (sub-categoria) agregada: motivo principal + detalhe + contagem.
+export type AssignmentIntentStat = {
+  reason: 'AUMENTO_QUADRO' | 'SUBSTITUICAO';
+  detail: string;
+  count: number;
+};
+
 export type AssignmentReasonsSummary = {
   aumentoQuadro: number;
   substituicao: number;
   total: number;
+  // Principais intenções do mês (mais frequentes primeiro), pra detalhar
+  // o KPI. Vazio quando ninguém preencheu intenção no período.
+  topIntents: AssignmentIntentStat[];
 };
 
 export async function getAssignmentReasonsThisMonth(): Promise<AssignmentReasonsSummary> {
   const since = startOfMonth();
-  const [aumentoQuadro, substituicao] = await Promise.all([
+  const [aumentoQuadro, substituicao, intentsGrouped] = await Promise.all([
     prisma.movementLog.count({
       where: {
         timestamp: { gte: since },
@@ -298,11 +308,39 @@ export async function getAssignmentReasonsThisMonth(): Promise<AssignmentReasons
         assignmentReason: 'SUBSTITUICAO',
       },
     }),
+    prisma.movementLog.groupBy({
+      by: ['assignmentReason', 'assignmentReasonDetail'],
+      where: {
+        timestamp: { gte: since },
+        destinationStatus: 'EmUso',
+        isVoided: false,
+        assignmentReasonDetail: { not: null },
+      },
+      _count: { _all: true },
+    }),
   ]);
+
+  const topIntents: AssignmentIntentStat[] = intentsGrouped
+    .map((g: {
+      assignmentReason: 'AUMENTO_QUADRO' | 'SUBSTITUICAO' | null;
+      assignmentReasonDetail: string | null;
+      _count: { _all: number };
+    }) => ({
+      reason: g.assignmentReason,
+      detail: g.assignmentReasonDetail ?? '',
+      count: g._count._all,
+    }))
+    .filter(
+      (g): g is AssignmentIntentStat => g.reason !== null && g.detail.length > 0,
+    )
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
+
   return {
     aumentoQuadro,
     substituicao,
     total: aumentoQuadro + substituicao,
+    topIntents,
   };
 }
 

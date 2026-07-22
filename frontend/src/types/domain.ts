@@ -202,10 +202,18 @@ export type ActivePurchaseRequestsSummary = {
   aberta: number;
 };
 
+export type AssignmentIntentStat = {
+  reason: AssignmentReason;
+  detail: string;
+  count: number;
+};
+
 export type AssignmentReasonsSummary = {
   aumentoQuadro: number;
   substituicao: number;
   total: number;
+  /** Principais intenções (sub-categorias) do mês, mais frequentes 1º. */
+  topIntents: AssignmentIntentStat[];
 };
 
 export type StockBreakdown = {

@@ -15,9 +15,23 @@ import {
   editMovement,
   voidMovement,
   reassignAsset,
+  getAssignmentIntentSuggestions,
 } from '../services/movementService';
 
 const router = Router();
+
+// Sugestões de intenção (autocomplete do painel de atribuição). Opcional
+// ?reason=AUMENTO_QUADRO|SUBSTITUICAO pra filtrar pelo motivo principal.
+router.get('/assignment-intents', canWriteAssets, async (req, res, next) => {
+  try {
+    const raw = typeof req.query.reason === 'string' ? req.query.reason : undefined;
+    const reason =
+      raw === 'AUMENTO_QUADRO' || raw === 'SUBSTITUICAO' ? raw : undefined;
+    res.json(await getAssignmentIntentSuggestions(reason));
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Registrar movimentação / transição de status (Fluxos A, B, C).
 router.post('/:serial/movements', canWriteAssets, async (req, res, next) => {

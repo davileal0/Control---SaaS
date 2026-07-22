@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState, FormEvent } from 'react';
-import { api, AuditResult, PeripheralTypeStock } from '../lib/api';
+import {
+  api,
+  AuditResult,
+  PeripheralTypeStock,
+  AssignmentIntentSuggestion,
+} from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { STATUS_LABEL, AssignmentReason } from '../types/domain';
 import PeripheralDeliveryPicker from './PeripheralDeliveryPicker';
@@ -31,6 +36,9 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
   const [assignmentReason, setAssignmentReason] = useState<
     AssignmentReason | ''
   >('');
+  // Sub-categoria/intenção (opcional) + sugestões pro autocomplete.
+  const [reasonDetail, setReasonDetail] = useState('');
+  const [intents, setIntents] = useState<AssignmentIntentSuggestion[]>([]);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +70,18 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
       .catch(() => {})
       .finally(() => setLoadingStock(false));
   }, [canDeliverPeripherals]);
+
+  // Busca as intenções já usadas naquele motivo pro autocomplete.
+  useEffect(() => {
+    if (!assignmentReason) {
+      setIntents([]);
+      return;
+    }
+    api
+      .assignmentIntents(assignmentReason)
+      .then(setIntents)
+      .catch(() => setIntents([]));
+  }, [assignmentReason]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -111,6 +131,7 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
         managerName: manager,
         department: dept,
         assignmentReason,
+        assignmentReasonDetail: reasonDetail.trim() || undefined,
         notes: notes.trim() || undefined,
         peripherals,
       });
@@ -229,6 +250,37 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
               <option value="SUBSTITUICAO">Substituição</option>
             </select>
           </label>
+
+          {/* Sub-categoria/intenção: só aparece depois de escolher o motivo.
+              Combobox com autocomplete das intenções já usadas. */}
+          {assignmentReason && (
+            <label className="form-field">
+              <span className="form-label">
+                Intenção / detalhe{' '}
+                <span className="form-label__hint">(opcional)</span>
+              </span>
+              <input
+                className="field"
+                list="assign-intents"
+                value={reasonDetail}
+                onChange={(e) => setReasonDetail(e.target.value)}
+                placeholder={
+                  assignmentReason === 'SUBSTITUICAO'
+                    ? 'ex.: Upgrade IFS'
+                    : 'ex.: Migração Empresa X'
+                }
+                autoComplete="off"
+                maxLength={120}
+              />
+              <datalist id="assign-intents">
+                {intents.map((i) => (
+                  <option key={i.detail} value={i.detail}>
+                    {`usado ${i.count}x`}
+                  </option>
+                ))}
+              </datalist>
+            </label>
+          )}
 
           <label className="form-field">
             <span className="form-label">Observações (opcional)</span>

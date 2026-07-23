@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, Metrics, PeripheralBreakdown } from './api';
 
 // Dados de exemplo para visualizar a UI sem o back-end no ar.
@@ -38,25 +38,26 @@ export function useDashboard() {
   const [usingSample, setUsingSample] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let alive = true;
-    Promise.all([api.metrics(), api.peripherals()])
+  // Carrega (ou recarrega) as métricas gerais. NÃO mexe em `loading` além
+  // do fim — assim um refresh não pisca o spinner de tela cheia.
+  const refresh = useCallback(() => {
+    return Promise.all([api.metrics(), api.peripherals()])
       .then(([m, p]) => {
-        if (!alive) return;
         setMetrics(m);
         setPeripherals(p);
+        setUsingSample(false);
       })
       .catch(() => {
-        if (!alive) return;
         setMetrics(SAMPLE_METRICS);
         setPeripherals(SAMPLE_PERIPHERALS);
         setUsingSample(true);
       })
-      .finally(() => alive && setLoading(false));
-    return () => {
-      alive = false;
-    };
+      .finally(() => setLoading(false));
   }, []);
 
-  return { metrics, peripherals, usingSample, loading };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { metrics, peripherals, usingSample, loading, refresh };
 }

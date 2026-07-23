@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Donut from '../components/Donut';
 import Spinner from '../components/Spinner';
 import Sparkline from '../components/Sparkline';
@@ -58,7 +58,7 @@ const DONUT_OPTIONS: { key: DonutCategory; label: string }[] = [
 ];
 
 export default function Dashboard({ role, onNavigate }: DashboardProps) {
-  const { metrics, peripherals, usingSample, loading } = useDashboard();
+  const { metrics, peripherals, usingSample, loading, refresh } = useDashboard();
   const [showPeripherals, setShowPeripherals] = useState(false);
   const [donutCategory, setDonutCategory] = useState<DonutCategory>('Notebook');
 
@@ -73,12 +73,9 @@ export default function Dashboard({ role, onNavigate }: DashboardProps) {
   const [showAllFeed, setShowAllFeed] = useState(false);
   const [fullFeed, setFullFeed] = useState<ActivityFeedItem[]>([]);
 
-  useEffect(() => {
-    if (!role) return;
-    // Reset ao trocar de papel (ex: "Visualizar como" do dev)
-    setOpMetrics(null);
-    setLMetrics(null);
-    setDMetrics(null);
+  // Busca o pacote de KPIs do papel atual (sem zerar o estado antes —
+  // assim um refresh não pisca o spinner da seção).
+  const loadRoleMetrics = useCallback(() => {
     if (role === 'OPERADOR_N1') {
       api.getOperatorMetrics().then(setOpMetrics).catch(() => {});
     } else if (role === 'LIDER_N1') {
@@ -88,10 +85,44 @@ export default function Dashboard({ role, onNavigate }: DashboardProps) {
     }
   }, [role]);
 
-  // Feed independe do papel — carrega uma vez ao montar
-  useEffect(() => {
+  const loadFeed = useCallback(() => {
     api.getActivityFeed(6).then(setFeed).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!role) return;
+    // Reset ao trocar de papel (ex: "Visualizar como" do dev)
+    setOpMetrics(null);
+    setLMetrics(null);
+    setDMetrics(null);
+    loadRoleMetrics();
+  }, [role, loadRoleMetrics]);
+
+  // Feed independe do papel — carrega ao montar
+  useEffect(() => {
+    loadFeed();
+  }, [loadFeed]);
+
+  // Auto-refresh: ao voltar o foco pra janela/aba, recarrega métricas e
+  // feed. Cobre o caso de fazer uma movimentação em outra aba/app e
+  // voltar pro dashboard sem dar F5. (Navegar entre abas internas já
+  // remonta o componente e recarrega por si.)
+  useEffect(() => {
+    const onFocus = () => {
+      refresh();
+      loadRoleMetrics();
+      loadFeed();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') onFocus();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [refresh, loadRoleMetrics, loadFeed]);
 
   // Abre o modal "Ver todas" carregando um lote maior (50)
   const handleSeeAllFeed = () => {

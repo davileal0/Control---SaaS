@@ -395,6 +395,8 @@ export const api = {
   getDirectorMetrics: () => request<DirectorMetrics>('/metrics/director'),
   getActivityFeed: (limit = 6) =>
     request<ActivityFeedItem[]>(`/metrics/activity-feed?limit=${limit}`),
+  getTodayMovements: () =>
+    request<ActivityFeedItem[]>('/metrics/movements-today'),
   createUser: (input: CreateUserInput) =>
     request<User>('/users', {
       method: 'POST',

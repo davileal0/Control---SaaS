@@ -255,6 +255,7 @@ export interface ActivityFeedItem {
   trackingCode: string | null;
   notes: string | null;
   assignmentReason: string | null;
+  assignmentReasonDetail: string | null;
   originStatus: string | null;
   destinationStatus: string;
   isVoided: boolean;

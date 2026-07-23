@@ -3,6 +3,7 @@ import Donut from '../components/Donut';
 import Spinner from '../components/Spinner';
 import Sparkline from '../components/Sparkline';
 import PeripheralsModal from './PeripheralsModal';
+import TodayMovementsModal from './TodayMovementsModal';
 import ActivityFeed, { FullFeedModal } from '../components/ActivityFeed';
 import {
   IconKPI,
@@ -405,6 +406,22 @@ function OperatorSection({
   onNavigatePR,
   onOpenPeripherals,
 }: OperatorSectionProps) {
+  // Painel de detalhe do card "Movimentações hoje" (carrega ao abrir).
+  // Hooks ficam ANTES de qualquer return condicional (regras de hooks).
+  const [showToday, setShowToday] = useState(false);
+  const [todayItems, setTodayItems] = useState<ActivityFeedItem[]>([]);
+  const [loadingToday, setLoadingToday] = useState(false);
+
+  function openTodayMovements() {
+    setShowToday(true);
+    setLoadingToday(true);
+    api
+      .getTodayMovements()
+      .then(setTodayItems)
+      .catch(() => setTodayItems([]))
+      .finally(() => setLoadingToday(false));
+  }
+
   if (!opMetrics) {
     return (
       <div className="kpi-grid">
@@ -465,8 +482,9 @@ function OperatorSection({
           subtitle={
             opMetrics.movementsToday === 0
               ? 'Sem registros hoje'
-              : 'Lançamentos do dia'
+              : 'Ver detalhes do dia'
           }
+          onClick={openTodayMovements}
           trailing={
             <Sparkline
               data={opMetrics.movementsSparkline7d}
@@ -489,6 +507,14 @@ function OperatorSection({
           onClick={onNavigatePR}
         />
       </div>
+
+      {showToday && (
+        <TodayMovementsModal
+          items={todayItems}
+          loading={loadingToday}
+          onClose={() => setShowToday(false)}
+        />
+      )}
     </section>
   );
 }

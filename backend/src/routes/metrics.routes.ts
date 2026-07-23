@@ -5,7 +5,10 @@ import {
   getLeaderMetrics,
   getDirectorMetrics,
 } from '../services/metricsService';
-import { getActivityFeed } from '../services/activityFeedService';
+import {
+  getActivityFeed,
+  getTodayMovements,
+} from '../services/activityFeedService';
 
 const router = Router();
 
@@ -59,6 +62,16 @@ router.get('/activity-feed', anyAuthenticated, async (req, res, next) => {
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[metrics/activity-feed] ERRO DETALHADO:', err);
+    next(err);
+  }
+});
+
+// Movimentações de HOJE (detalhe do card "Movimentações hoje"). Mesmo
+// filtro do KPI, então a lista bate com o número. Todos os papéis.
+router.get('/movements-today', anyAuthenticated, async (_req, res, next) => {
+  try {
+    res.json(await getTodayMovements());
+  } catch (err) {
     next(err);
   }
 });

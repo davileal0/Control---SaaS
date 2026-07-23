@@ -41,6 +41,8 @@ export type ActivityFeedItem = {
   trackingCode: string | null;
   notes: string | null;
   assignmentReason: string | null;
+  // Sub-categoria/intenção da atribuição (quando houver)
+  assignmentReasonDetail: string | null;
   // Estados crus (pra UI que queira mostrar)
   originStatus: string | null;
   destinationStatus: string;
@@ -104,6 +106,54 @@ export async function getActivityFeed(limit = 6): Promise<ActivityFeedItem[]> {
     trackingCode: log.trackingCode,
     notes: log.notes,
     assignmentReason: log.assignmentReason,
+    assignmentReasonDetail: log.assignmentReasonDetail,
+    originStatus: log.originStatus,
+    destinationStatus: log.destinationStatus,
+    isVoided: log.isVoided,
+  }));
+}
+
+/**
+ * Movimentações de HOJE (a partir do início do dia). Usa exatamente o
+ * mesmo filtro do KPI "Movimentações hoje" (exclui ingestão e descarte),
+ * pra que a lista do painel bata com o número do card. Inclui a
+ * sub-categoria/intenção quando houver.
+ */
+export async function getTodayMovements(): Promise<ActivityFeedItem[]> {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  const logs = await prisma.movementLog.findMany({
+    where: {
+      // Espelha o MOVEMENT_FILTER do metricsService: sem ingestão nem descarte.
+      originStatus: { not: null },
+      NOT: { notes: { startsWith: '[DESCARTE]' } },
+      timestamp: { gte: start },
+    },
+    orderBy: { timestamp: 'desc' },
+    include: {
+      asset: {
+        select: { model: true, category: true },
+      },
+    },
+  });
+
+  return logs.map((log: (typeof logs)[number]) => ({
+    id: log.id,
+    kind: deriveKind(log.originStatus, log.destinationStatus),
+    timestamp: log.timestamp.toISOString(),
+    serialNumber: log.assetSerialNumber,
+    model: log.asset.model,
+    category: log.asset.category,
+    endUserName: log.endUserName,
+    managerName: log.managerName,
+    department: log.department,
+    ticketId: log.ticketId,
+    invoiceNumber: log.invoiceNumber,
+    trackingCode: log.trackingCode,
+    notes: log.notes,
+    assignmentReason: log.assignmentReason,
+    assignmentReasonDetail: log.assignmentReasonDetail,
     originStatus: log.originStatus,
     destinationStatus: log.destinationStatus,
     isVoided: log.isVoided,

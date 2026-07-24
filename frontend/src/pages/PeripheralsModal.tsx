@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { PeripheralBreakdown } from '../lib/api';
 import { LOW_STOCK_THRESHOLD } from '../lib/constants';
+import { AlertIcon } from '../components/icons';
 import './peripherals-modal.css';
 
 interface Props {
@@ -77,7 +78,18 @@ export default function PeripheralsModal({ data, onClose }: Props) {
             const isAlert = item.available <= LOW_STOCK_THRESHOLD;
             return (
               <li key={item.model} className={`periph-row ${isAlert ? 'periph-row--alert' : ''}`}>
-                <span className="periph-row__name">{item.model}</span>
+                <span className="periph-row__name">
+                  {item.model}
+                  {isAlert && (
+                    <span
+                      className="periph-row__alert"
+                      title="Estoque crítico — repor"
+                      aria-label="Estoque crítico"
+                    >
+                      <AlertIcon size={14} />
+                    </span>
+                  )}
+                </span>
                 <span className="periph-row__bar">
                   <span
                     className="periph-row__fill"

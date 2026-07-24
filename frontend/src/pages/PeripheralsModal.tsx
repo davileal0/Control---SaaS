@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { PeripheralBreakdown } from '../lib/api';
 import { LOW_STOCK_THRESHOLD } from '../lib/constants';
-import { AlertIcon } from '../components/icons';
 import './peripherals-modal.css';
 
 interface Props {
@@ -86,7 +85,7 @@ export default function PeripheralsModal({ data, onClose }: Props) {
                       title="Estoque crítico — repor"
                       aria-label="Estoque crítico"
                     >
-                      <AlertIcon size={14} />
+                      !
                     </span>
                   )}
                 </span>

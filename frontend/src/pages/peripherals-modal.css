@@ -72,13 +72,23 @@
 }
 .periph-row__name { color: var(--text-secondary); font-size: 14px; }
 
-/* Ícone de alerta (exclamação) ao lado de periférico com estoque crítico. */
+/* Badge de alerta (círculo âmbar preenchido com "!") ao lado de
+   periférico com estoque crítico — alto contraste pra destacar. */
 .periph-row__alert {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   vertical-align: middle;
-  margin-left: 7px;
-  color: #d8b15a;
+  margin-left: 8px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #e0972a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #e0972a 22%, transparent);
 }
 .periph-row__bar {
   height: 8px; border-radius: 6px;

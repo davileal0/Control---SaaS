@@ -80,6 +80,10 @@
   --led-soft: #a83434;
   --led-glow: rgba(194, 58, 58, 0.32);
 
+  /* LED verde FOSCO — sinaliza "disponível" (par do vermelho acima) */
+  --led-green: #3f9d5a;
+  --led-green-glow: rgba(63, 157, 90, 0.32);
+
   /* Marca Unifique — azul corporativo. Usado pontualmente como
      acento secundário (links, séries de gráficos, badges) e como
      base atmosférica de ambos os temas (light claro, dark navy). */
@@ -291,6 +295,10 @@
   --led: #a82828;
   --led-soft: #8a2222;
   --led-glow: rgba(168, 40, 40, 0.22);
+
+  /* LED verde — versão mais saturada pra contrastar no tema claro */
+  --led-green: #2e8b57;
+  --led-green-glow: rgba(46, 139, 87, 0.24);
 
   /* Texto: preto e cinzas escuros pra máxima legibilidade.
      text-muted ajustado pra #5a6580 (era #6e7a8e) — atinge contraste

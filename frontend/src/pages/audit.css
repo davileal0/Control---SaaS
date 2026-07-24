@@ -29,6 +29,14 @@
   border-radius: 50%; background: var(--led); box-shadow: 0 0 7px var(--led-glow);
   vertical-align: middle;
 }
+/* Disponível: mesmo padrão do Em Uso, mas com LED verde — melhora o
+   contraste da pill (antes caía no estilo base, apagado). */
+.pill--Disponivel { color: var(--text-satin); box-shadow: var(--extrude-sm), 0 0 0 1px var(--led-green-glow); }
+.pill--Disponivel::before {
+  content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 7px;
+  border-radius: 50%; background: var(--led-green); box-shadow: 0 0 7px var(--led-green-glow);
+  vertical-align: middle;
+}
 .pill--Danificado { color: #d8b15a; }
 .pill--archived { color: var(--text-muted); }
 

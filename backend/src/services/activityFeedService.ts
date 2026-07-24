@@ -125,9 +125,14 @@ export async function getTodayMovements(): Promise<ActivityFeedItem[]> {
 
   const logs = await prisma.movementLog.findMany({
     where: {
-      // Espelha o MOVEMENT_FILTER do metricsService: sem ingestão nem descarte.
+      // Espelha o MOVEMENT_FILTER do metricsService: sem ingestão nem
+      // descarte. O OR mantém movimentações com notes nulo (senão o
+      // `NOT (notes LIKE '[DESCARTE]%')` viraria NULL e as excluiria).
       originStatus: { not: null },
-      NOT: { notes: { startsWith: '[DESCARTE]' } },
+      OR: [
+        { notes: null },
+        { NOT: { notes: { startsWith: '[DESCARTE]' } } },
+      ],
       timestamp: { gte: start },
     },
     orderBy: { timestamp: 'desc' },

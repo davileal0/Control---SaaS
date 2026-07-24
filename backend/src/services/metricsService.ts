@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../db/prisma';
 import { LOW_STOCK_THRESHOLD } from './stockThresholds';
 
@@ -56,14 +57,19 @@ function daysBetween(a: Date, b: Date) {
  * Aplicado em TODAS as contagens de movimentação (hoje, 7 dias, mês,
  * sparkline) pra a definição ser idêntica em qualquer janela/papel.
  */
-const MOVEMENT_FILTER = {
+const MOVEMENT_FILTER: Prisma.MovementLogWhereInput = {
   // Exclui ingestão (cadastro de ativo)
   originStatus: { not: null },
-  // Exclui descarte (marcado com prefixo [DESCARTE] nas notes)
-  NOT: {
-    notes: { startsWith: '[DESCARTE]' },
-  },
-} as const;
+  // Exclui descarte (prefixo [DESCARTE] nas notes) SEM excluir por engano
+  // as movimentações sem observação. Em SQL, `NOT (notes LIKE '[DESCARTE]%')`
+  // vira NULL quando notes é NULL — e NULL não é TRUE, então a linha era
+  // removida (bug: devoluções/reparos sem observação sumiam da contagem).
+  // O OR abaixo mantém explicitamente as linhas com notes nulo.
+  OR: [
+    { notes: null },
+    { NOT: { notes: { startsWith: '[DESCARTE]' } } },
+  ],
+};
 
 export async function countAvailable() {
   return prisma.asset.count({

@@ -236,6 +236,14 @@ export default function AssetDetailModal({
                 </span>
                 <h2>{data.model}</h2>
                 <code className="audit-serial">{data.serialNumber}</code>
+                {data.imei && (
+                  <code
+                    className="audit-serial"
+                    style={{ display: 'block', marginTop: 4 }}
+                  >
+                    IMEI {data.imei}
+                  </code>
+                )}
               </div>
               <div className="audit-state">
                 <span className={`pill pill--${data.status}`}>

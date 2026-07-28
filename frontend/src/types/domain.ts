@@ -9,6 +9,8 @@ export interface Asset {
   status: AssetStatus;
   isArchived: boolean;
   createdAt: string;
+  /** IMEI — presente apenas em celulares */
+  imei?: string | null;
 }
 
 export interface Correction {

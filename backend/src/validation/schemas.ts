@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidImei } from '../services/imei';
 
 // Validação de entrada (allowlist de tipo/tamanho/formato).
 // Os identificadores de enum batem com o Prisma/domínio.
@@ -39,6 +40,8 @@ export const createAssetSchema = z
     // Modo INDIVIDUAL (categoria != Periférico)
     serialNumber: serial.optional(),
     model: z.string().trim().min(1).max(160).optional(),
+    // IMEI: só usado quando categoria = Celular (validado no refine).
+    imei: z.string().trim().optional(),
     // Modo BULK (categoria = Periférico)
     peripheralType: z.string().trim().min(1).max(80).optional(),
     quantity: z
@@ -80,6 +83,23 @@ export const createAssetSchema = z
           path: ['model'],
           message: 'Modelo obrigatório.',
         });
+      }
+      // Celular exige IMEI válido (15 dígitos + Luhn). Outras categorias
+      // ignoram o campo.
+      if (data.category === 'Celular') {
+        if (!data.imei) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['imei'],
+            message: 'IMEI obrigatório para celular.',
+          });
+        } else if (!isValidImei(data.imei)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['imei'],
+            message: 'IMEI inválido (precisa ter 15 dígitos e dígito verificador correto).',
+          });
+        }
       }
     }
   });

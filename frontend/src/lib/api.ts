@@ -185,6 +185,8 @@ export interface CreateAssetIndividualInput {
   category: 'Notebook' | 'Desktop' | 'Celular' | 'AllInOne';
   serialNumber: string;
   model: string;
+  /** IMEI — obrigatório quando category === 'Celular' */
+  imei?: string;
 }
 
 // Modo bulk: Periférico em massa — só tipo + quantidade

@@ -3,6 +3,7 @@ import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import HelpButton from '../components/HelpButton';
 import { PERIPHERAL_TYPES } from '../lib/peripheralTypes';
+import { isValidImei } from '../lib/imei';
 import './peripherals-modal.css'; // reusa .modal-backdrop / .modal / .modal__head
 import './asset-modal.css';
 
@@ -77,6 +78,8 @@ export default function AssetCreateModal({ onClose, onCreated }: Props) {
   // Campos do modo INDIVIDUAL
   const [serialNumber, setSerialNumber] = useState('');
   const [model, setModel] = useState('');
+  // IMEI — só pra celular (rastreio secundário além do SN).
+  const [imei, setImei] = useState('');
 
   // Campos do modo MASSA (equipamento via lista de SNs)
   const [bulkModel, setBulkModel] = useState('');
@@ -207,10 +210,25 @@ export default function AssetCreateModal({ onClose, onCreated }: Props) {
           setSubmitting(false);
           return;
         }
+        // Celular exige IMEI válido (15 dígitos + Luhn).
+        const im = imei.trim();
+        if (category === 'Celular') {
+          if (!im) {
+            setError('Informe o IMEI do celular.');
+            setSubmitting(false);
+            return;
+          }
+          if (!isValidImei(im)) {
+            setError('IMEI inválido — precisa ter 15 dígitos e dígito verificador correto.');
+            setSubmitting(false);
+            return;
+          }
+        }
         const res = await api.createAsset({
           category,
           serialNumber: sn,
           model: md,
+          ...(category === 'Celular' ? { imei: im } : {}),
         });
         if (res.mode === 'individual') {
           toast.success(`${res.asset.model} cadastrado no inventário`);
@@ -563,6 +581,26 @@ GHI789`}</div>
                     required
                   />
                 </label>
+
+                {/* IMEI — só pra celular. Rastreio secundário além do SN. */}
+                {category === 'Celular' && (
+                  <label className="form-field">
+                    <span className="form-label">IMEI</span>
+                    <input
+                      className="field"
+                      value={imei}
+                      onChange={(e) => setImei(e.target.value)}
+                      placeholder="ex.: 490154203237518 (15 dígitos)"
+                      inputMode="numeric"
+                      maxLength={15}
+                      autoComplete="off"
+                      required
+                    />
+                    <span className="form-hint">
+                      15 dígitos. Encontrável discando *#06# no aparelho.
+                    </span>
+                  </label>
+                )}
               </>
             )}
 

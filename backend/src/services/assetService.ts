@@ -57,6 +57,8 @@ export async function createAsset(input: CreateAssetInput, actor: AuthUser) {
     input.model!,
     input.category,
     actor,
+    // IMEI só se aplica a celular (validado no schema).
+    input.category === 'Celular' ? input.imei ?? null : null,
   );
 }
 
@@ -69,6 +71,7 @@ async function createIndividualAsset(
   model: string,
   category: 'Notebook' | 'Desktop' | 'Celular' | 'AllInOne',
   actor: AuthUser,
+  imei: string | null = null,
 ) {
   const exists = await prisma.asset.findUnique({
     where: { serialNumber },
@@ -80,6 +83,17 @@ async function createIndividualAsset(
     );
   }
 
+  // IMEI é único: bloqueia duplicidade com mensagem clara (em vez de
+  // deixar estourar a constraint como erro genérico do banco).
+  if (imei) {
+    const imeiExists = await prisma.asset.findUnique({ where: { imei } });
+    if (imeiExists) {
+      throw Object.assign(new Error('Já existe um ativo com este IMEI.'), {
+        statusCode: 409,
+      });
+    }
+  }
+
   const asset = await prisma.$transaction(async (tx: Tx) => {
     const created = await tx.asset.create({
       data: {
@@ -87,6 +101,7 @@ async function createIndividualAsset(
         model,
         category,
         status: 'Disponivel',
+        imei,
       },
     });
 

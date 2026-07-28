@@ -60,6 +60,11 @@ model Asset {
   isArchived   Boolean     @default(false) @map("is_archived")
   createdAt    DateTime    @default(now()) @map("created_at")
 
+  // IMEI: identificador secundário exclusivo de celulares (rastreio por
+  // IMEI além do SN). Nullable — só celular preenche. Único quando
+  // presente (Postgres permite múltiplos NULL num índice unique).
+  imei         String?     @unique
+
   movementLogs MovementLog[]
 
   // Consultas quentes do dashboard filtram por status e arquivamento,

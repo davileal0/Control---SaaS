@@ -4,6 +4,7 @@ import { useToast } from '../contexts/ToastContext';
 import HelpButton from '../components/HelpButton';
 import { PERIPHERAL_TYPES } from '../lib/peripheralTypes';
 import { isValidImei } from '../lib/imei';
+import { Unit } from '../types/domain';
 import './peripherals-modal.css'; // reusa .modal-backdrop / .modal / .modal__head
 import './asset-modal.css';
 
@@ -99,6 +100,10 @@ export default function AssetCreateModal({ onClose, onCreated }: Props) {
   const [peripheralType, setPeripheralType] = useState('');
   const [quantity, setQuantity] = useState('');
 
+  // Unidade (filial) — aplica a equipamento (não a periférico).
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [unitId, setUnitId] = useState('');
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
@@ -113,6 +118,11 @@ export default function AssetCreateModal({ onClose, onCreated }: Props) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  // Carrega as unidades ativas pro seletor (equipamento).
+  useEffect(() => {
+    api.listUnits().then(setUnits).catch(() => setUnits([]));
+  }, []);
 
   // Reseta preview/erro ao trocar categoria ou modo
   useEffect(() => {
@@ -142,6 +152,10 @@ export default function AssetCreateModal({ onClose, onCreated }: Props) {
 
   // Confirma e envia ao backend (passo 2 do modo massa)
   async function handleBulkConfirm() {
+    if (units.length > 0 && !unitId) {
+      setError('Selecione a unidade onde os ativos ficarão.');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -149,6 +163,7 @@ export default function AssetCreateModal({ onClose, onCreated }: Props) {
         category: category as 'Notebook' | 'Desktop' | 'Celular' | 'AllInOne',
         model: bulkModel.trim(),
         serialNumbersRaw: bulkSerialsRaw,
+        ...(unitId ? { unitId } : {}),
       });
       setBulkReport({
         created: result.created,
@@ -224,11 +239,17 @@ export default function AssetCreateModal({ onClose, onCreated }: Props) {
             return;
           }
         }
+        if (units.length > 0 && !unitId) {
+          setError('Selecione a unidade onde o ativo ficará.');
+          setSubmitting(false);
+          return;
+        }
         const res = await api.createAsset({
           category,
           serialNumber: sn,
           model: md,
           ...(category === 'Celular' ? { imei: im } : {}),
+          ...(unitId ? { unitId } : {}),
         });
         if (res.mode === 'individual') {
           toast.success(`${res.asset.model} cadastrado no inventário`);
@@ -445,6 +466,33 @@ GHI789`}</div>
                   </ul>
                 </HelpButton>
               </div>
+            )}
+
+            {/* Unidade (localização) — só pra equipamento rastreável. */}
+            {!isBulk && (
+              <label className="form-field">
+                <span className="form-label">Unidade (localização)</span>
+                {units.length === 0 ? (
+                  <span className="form-hint">
+                    Nenhuma unidade cadastrada. Crie em Configurações →
+                    Unidades para localizar o ativo.
+                  </span>
+                ) : (
+                  <select
+                    className="field"
+                    value={unitId}
+                    onChange={(e) => setUnitId(e.target.value)}
+                    required
+                  >
+                    <option value="">Selecione…</option>
+                    {units.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </label>
             )}
 
             {isBulk ? (

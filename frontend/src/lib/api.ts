@@ -188,6 +188,8 @@ export interface CreateAssetIndividualInput {
   model: string;
   /** IMEI — obrigatório quando category === 'Celular' */
   imei?: string;
+  /** Unidade física inicial (opcional) */
+  unitId?: string;
 }
 
 // Modo bulk: Periférico em massa — só tipo + quantidade
@@ -302,6 +304,7 @@ export const api = {
     category: 'Notebook' | 'Desktop' | 'Celular' | 'AllInOne';
     model: string;
     serialNumbersRaw: string;
+    unitId?: string;
   }) =>
     request<EquipmentBulkResult>('/assets/bulk-equipment', {
       method: 'POST',

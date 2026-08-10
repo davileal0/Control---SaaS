@@ -59,7 +59,28 @@ export async function createAsset(input: CreateAssetInput, actor: AuthUser) {
     actor,
     // IMEI só se aplica a celular (validado no schema).
     input.category === 'Celular' ? input.imei ?? null : null,
+    input.unitId ?? null,
   );
+}
+
+/**
+ * Resolve a unidade informada: valida existência e se está ativa.
+ * Retorna id + nome (o nome é carimbado no lançamento como snapshot).
+ */
+async function resolveUnit(
+  unitId?: string | null,
+): Promise<{ id: string; name: string } | null> {
+  if (!unitId) return null;
+  const unit = await prisma.unit.findUnique({
+    where: { id: unitId },
+    select: { id: true, name: true, isActive: true },
+  });
+  if (!unit || !unit.isActive) {
+    throw Object.assign(new Error('Unidade inválida ou inativa.'), {
+      statusCode: 400,
+    });
+  }
+  return { id: unit.id, name: unit.name };
 }
 
 // ---------------------------------------------------------------------
@@ -72,7 +93,9 @@ async function createIndividualAsset(
   category: 'Notebook' | 'Desktop' | 'Celular' | 'AllInOne',
   actor: AuthUser,
   imei: string | null = null,
+  unitId: string | null = null,
 ) {
+  const unit = await resolveUnit(unitId);
   const exists = await prisma.asset.findUnique({
     where: { serialNumber },
   });
@@ -102,6 +125,7 @@ async function createIndividualAsset(
         category,
         status: 'Disponivel',
         imei,
+        currentUnitId: unit?.id ?? null,
       },
     });
 
@@ -111,6 +135,7 @@ async function createIndividualAsset(
         originStatus: null,
         destinationStatus: 'Disponivel',
         notes: '[INGESTÃO] Cadastro inicial do ativo.',
+        unitName: unit?.name ?? null,
         ...actorFields(actor),
       },
     });
@@ -201,7 +226,9 @@ async function createEquipmentsBulk(
   model: string,
   serials: string[],
   actor: AuthUser,
+  unitId: string | null = null,
 ): Promise<EquipmentBulkResult> {
+  const unit = await resolveUnit(unitId);
   // Verifica quais SNs já existem (pula duplicadas — não bloqueia)
   const existing = await prisma.asset.findMany({
     where: { serialNumber: { in: serials } },
@@ -229,6 +256,7 @@ async function createEquipmentsBulk(
         model,
         category,
         status: 'Disponivel' as const,
+        currentUnitId: unit?.id ?? null,
       })),
     });
     await tx.movementLog.createMany({
@@ -237,6 +265,7 @@ async function createEquipmentsBulk(
         originStatus: null,
         destinationStatus: 'Disponivel' as const,
         notes: `[INGESTÃO MASSIVA] Cadastro de ${toCreate.length} ${model}.`,
+        unitName: unit?.name ?? null,
         ...actorFields(actor),
       })),
     });
@@ -266,6 +295,7 @@ export async function createEquipmentsBulkFromRaw(
   model: string,
   serialNumbersRaw: string,
   actor: AuthUser,
+  unitId: string | null = null,
 ): Promise<EquipmentBulkResult> {
   const parsed = parseSerials(serialNumbersRaw);
   if (parsed.serials.length === 0) {
@@ -279,6 +309,7 @@ export async function createEquipmentsBulkFromRaw(
     model,
     parsed.serials,
     actor,
+    unitId,
   );
   // Completa o relatório com dados do parsing
   return {
@@ -378,6 +409,7 @@ export async function listActiveAssets(filters: ListFiltersInput = {}) {
     },
     orderBy: { createdAt: 'desc' },
     include: {
+      currentUnit: { select: { id: true, name: true } },
       movementLogs: {
         where: { isVoided: false },
         orderBy: { timestamp: 'desc' },

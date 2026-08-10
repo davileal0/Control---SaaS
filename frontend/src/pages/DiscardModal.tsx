@@ -3,6 +3,7 @@ import { api, AuditResult } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { STATUS_LABEL } from '../types/domain';
 import { AlertIcon } from '../components/icons';
+import AssetLocation from '../components/AssetLocation';
 import './peripherals-modal.css';
 import './audit.css'; // pill styles
 import './asset-modal.css';
@@ -127,6 +128,7 @@ export default function DiscardModal({ asset, onClose, onConfirmed }: Props) {
 
             <div className="movement-context">
               <div className="movement-context__asset">
+                <AssetLocation unit={asset.currentUnit} />
                 <span className="movement-context__model">{asset.model}</span>
                 <code className="movement-context__serial">
                   {asset.serialNumber}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, AuditResult } from '../lib/api';
 import { STATUS_LABEL, CATEGORY_LABEL, ROLE_LABEL, Role, ASSIGNMENT_REASON_LABEL } from '../types/domain';
+import AssetLocation from '../components/AssetLocation';
 import { canWrite } from '../lib/rbac';
 import AssignModal from './AssignModal';
 import ReceiveModal from './ReceiveModal';
@@ -244,6 +245,9 @@ export default function AssetDetailModal({
                     IMEI {data.imei}
                   </code>
                 )}
+                <div style={{ marginTop: 8 }}>
+                  <AssetLocation unit={data.currentUnit} />
+                </div>
               </div>
               <div className="audit-state">
                 <span className={`pill pill--${data.status}`}>

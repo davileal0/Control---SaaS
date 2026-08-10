@@ -42,6 +42,8 @@ export const createAssetSchema = z
     model: z.string().trim().min(1).max(160).optional(),
     // IMEI: só usado quando categoria = Celular (validado no refine).
     imei: z.string().trim().optional(),
+    // Unidade física inicial (opcional; só faz sentido pra equipamento).
+    unitId: z.string().uuid('Unidade inválida.').optional(),
     // Modo BULK (categoria = Periférico)
     peripheralType: z.string().trim().min(1).max(80).optional(),
     quantity: z
@@ -256,6 +258,8 @@ export const createEquipmentsBulkSchema = z.object({
     .string()
     .min(1, 'Cole a lista de SNs.')
     .max(600000),
+  // Unidade física do lote (opcional).
+  unitId: z.string().uuid('Unidade inválida.').optional(),
 });
 export type CreateEquipmentsBulkInput = z.infer<
   typeof createEquipmentsBulkSchema

@@ -9,6 +9,7 @@ export async function getAuditTimeline(serial: string) {
   const asset = await prisma.asset.findUnique({
     where: { serialNumber: serial },
     include: {
+      currentUnit: { select: { id: true, name: true } },
       movementLogs: {
         orderBy: { timestamp: 'asc' },
         include: {

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, FormEvent } from 'react';
 import { api, AuditResult } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { STATUS_LABEL } from '../types/domain';
+import AssetLocation from '../components/AssetLocation';
 import './peripherals-modal.css';
 import './audit.css'; // pill styles
 import './asset-modal.css';
@@ -122,6 +123,7 @@ export default function ReceiveModal({ asset, onClose, onConfirmed }: Props) {
         {/* Contexto: ativo + de quem está vindo + transição com 2 destinos */}
         <div className="movement-context">
           <div className="movement-context__asset">
+            <AssetLocation unit={asset.currentUnit} />
             <span className="movement-context__model">{asset.model}</span>
             <code className="movement-context__serial">
               {asset.serialNumber}

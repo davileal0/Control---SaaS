@@ -8,6 +8,7 @@ import {
 import { useToast } from '../contexts/ToastContext';
 import { STATUS_LABEL, AssignmentReason } from '../types/domain';
 import PeripheralDeliveryPicker from './PeripheralDeliveryPicker';
+import AssetLocation from '../components/AssetLocation';
 import './peripherals-modal.css';
 import './audit.css'; // pill styles
 import './asset-modal.css';
@@ -174,6 +175,7 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
         {/* Contexto: ativo + transição visual reforça o que vai acontecer */}
         <div className="movement-context">
           <div className="movement-context__asset">
+            <AssetLocation unit={asset.currentUnit} />
             <span className="movement-context__model">{asset.model}</span>
             <code className="movement-context__serial">{asset.serialNumber}</code>
           </div>

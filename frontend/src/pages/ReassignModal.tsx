@@ -8,6 +8,7 @@ import {
 import { useToast } from '../contexts/ToastContext';
 import { AssignmentReason } from '../types/domain';
 import PeripheralDeliveryPicker from './PeripheralDeliveryPicker';
+import AssetLocation from '../components/AssetLocation';
 import './peripherals-modal.css';
 import './audit.css';
 import './asset-modal.css';
@@ -187,6 +188,7 @@ export default function ReassignModal({ asset, onClose, onConfirmed }: Props) {
             porque o estado inicial e final são iguais: EmUso) */}
         <div className="movement-context">
           <div className="movement-context__asset">
+            <AssetLocation unit={asset.currentUnit} />
             <span className="movement-context__model">{asset.model}</span>
             <code className="movement-context__serial">
               {asset.serialNumber}

@@ -1,0 +1,23 @@
+/* Badge de localização (unidade) do ativo — topo dos modais. */
+.asset-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--brand-blue, #4a82d6);
+  background: color-mix(in srgb, var(--brand-blue, #4a82d6) 12%, transparent);
+}
+
+.asset-location svg {
+  flex-shrink: 0;
+}
+
+.asset-location--none {
+  color: var(--text-muted);
+  background: var(--bg-recess);
+  font-weight: 500;
+}

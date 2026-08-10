@@ -19,6 +19,8 @@ export interface Asset {
   createdAt: string;
   /** IMEI — presente apenas em celulares */
   imei?: string | null;
+  /** Unidade física atual (filial). null se não definida. */
+  currentUnit?: { id: string; name: string } | null;
 }
 
 export interface Correction {

@@ -54,6 +54,7 @@ router.post('/bulk-equipment', canWriteAssets, async (req, res, next) => {
       input.model,
       input.serialNumbersRaw,
       req.user!,
+      input.unitId ?? null,
     );
     res.status(201).json(result);
   } catch (err) {

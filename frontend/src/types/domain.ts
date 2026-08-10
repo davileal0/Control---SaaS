@@ -1,5 +1,13 @@
 export type Role = 'OPERADOR_N1' | 'LIDER_N1' | 'DIRETOR_TI';
 
+// Unidade física (filial) — gerenciada em Configurações.
+export interface Unit {
+  id: string;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export type AssetStatus = 'Disponivel' | 'EmUso' | 'Danificado';
 
 export interface Asset {

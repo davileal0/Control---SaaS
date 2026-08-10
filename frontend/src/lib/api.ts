@@ -13,6 +13,7 @@ import {
   DirectorMetrics,
   ActivityFeedItem,
   Role,
+  Unit,
 } from '../types/domain';
 
 // Base da API. O token (Bearer) vem do fluxo de SSO; aqui só o anexamos.
@@ -338,6 +339,17 @@ export const api = {
       { method: 'POST', body: JSON.stringify(input) },
     ),
   listUsers: () => request<User[]>('/users'),
+
+  // ===== Unidades (filiais) =====
+  listUnits: (includeInactive = false) =>
+    request<Unit[]>(`/units${includeInactive ? '?includeInactive=true' : ''}`),
+  createUnit: (name: string) =>
+    request<Unit>('/units', { method: 'POST', body: JSON.stringify({ name }) }),
+  updateUnit: (id: string, input: { name?: string; isActive?: boolean }) =>
+    request<Unit>(`/units/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
 
   // ===== Solicitações de Compra (SC) =====
 

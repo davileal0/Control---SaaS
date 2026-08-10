@@ -227,6 +227,24 @@ export const listFiltersSchema = z.object({
   search: z.string().trim().max(120).optional(),
 });
 
+// Unidades físicas (filiais) — gerenciadas em Configurações.
+export const createUnitSchema = z.object({
+  name: z.string().trim().min(1, 'Nome da unidade obrigatório.').max(80),
+});
+export const updateUnitSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine((d) => d.name !== undefined || d.isActive !== undefined, {
+    message: 'Informe ao menos um campo para atualizar.',
+  });
+export const unitIdParamSchema = z.object({
+  id: z.string().uuid('ID de unidade inválido.'),
+});
+export type CreateUnitInput = z.infer<typeof createUnitSchema>;
+export type UpdateUnitInput = z.infer<typeof updateUnitSchema>;
+
 export type CreateAssetInput = z.infer<typeof createAssetSchema>;
 
 /** Cadastro de equipamentos em massa via lista de SNs colada.

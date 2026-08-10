@@ -9,6 +9,7 @@ import purchaseRequests from './purchaseRequests.routes';
 import metrics from './metrics.routes';
 import activity from './activity.routes';
 import inventory from './inventory.routes';
+import units from './units.routes';
 
 const api = Router();
 
@@ -22,6 +23,7 @@ api.use('/purchase-requests', purchaseRequests);
 api.use('/metrics', metrics);
 api.use('/activity', activity);
 api.use('/inventory', inventory);
+api.use('/units', units);
 
 export default api;
 

@@ -65,13 +65,31 @@ model Asset {
   // presente (Postgres permite múltiplos NULL num índice unique).
   imei         String?     @unique
 
+  // Unidade física atual do ativo (Timbó, Blumenau, Rio do Sul...).
+  // Atualizada nas movimentações. Nullable: ativos antigos sem unidade.
+  currentUnitId String? @map("current_unit_id")
+  currentUnit   Unit?   @relation(fields: [currentUnitId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
   movementLogs MovementLog[]
 
   // Consultas quentes do dashboard filtram por status e arquivamento,
   // e agrupam estoque por (category, model).
   @@index([status, isArchived])
   @@index([category, model])
+  @@index([currentUnitId])
   @@map("assets")
+}
+
+// Unidade física da empresa (filial). Gerenciada em Configurações.
+model Unit {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  assets Asset[]
+
+  @@map("units")
 }
 
 model MovementLog {
@@ -100,6 +118,10 @@ model MovementLog {
   // junto de assignmentReason. Alimenta as estatísticas de defesa de
   // compra e o detalhamento do KPI de atribuições.
   assignmentReasonDetail String? @map("assignment_reason_detail")
+
+  // Unidade física registrada NO momento do lançamento (snapshot de
+  // texto — preserva o histórico mesmo se a unidade for renomeada).
+  unitName String? @map("unit_name")
 
   // Correção: o lançamento pode ser editado ou removido (no caso de
   // engano), mas NUNCA é apagado fisicamente. "Remoção" = anulação lógica

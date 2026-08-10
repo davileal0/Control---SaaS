@@ -4,6 +4,7 @@ import { User, ROLE_LABEL } from '../types/domain';
 import Spinner from '../components/Spinner';
 import { useToast } from '../contexts/ToastContext';
 import UserModal from './UserModal';
+import UnitsCard from './UnitsCard';
 import './settings.css';
 
 // Tela de Configurações → Usuários.
@@ -178,6 +179,9 @@ export default function Settings() {
           onConfirmed={handleConfirmed}
         />
       )}
+
+      {/* Gestão de unidades (filiais) — localização dos ativos. */}
+      <UnitsCard />
     </>
   );
 }

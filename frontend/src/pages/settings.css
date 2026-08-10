@@ -8,6 +8,21 @@
   margin: 6px 0 18px;
 }
 
+/* Barra de adicionar unidade: input cresce + botão à direita. */
+.units-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 6px 0 18px;
+}
+.units-toolbar .field {
+  flex: 1;
+  min-width: 0;
+}
+.units-toolbar .btn {
+  flex-shrink: 0;
+}
+
 .users-empty {
   color: var(--text-muted);
   font-size: 14px;

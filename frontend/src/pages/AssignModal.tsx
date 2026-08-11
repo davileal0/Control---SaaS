@@ -9,6 +9,8 @@ import { useToast } from '../contexts/ToastContext';
 import { STATUS_LABEL, AssignmentReason } from '../types/domain';
 import PeripheralDeliveryPicker from './PeripheralDeliveryPicker';
 import AssetLocation from '../components/AssetLocation';
+import UnitSelectField from '../components/UnitSelectField';
+import { useUnits } from '../lib/useUnits';
 import './peripherals-modal.css';
 import './audit.css'; // pill styles
 import './asset-modal.css';
@@ -28,6 +30,8 @@ interface Props {
 // quadro vs M substituições".
 export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
   const toast = useToast();
+  const units = useUnits();
+  const [unitId, setUnitId] = useState(asset.currentUnit?.id ?? '');
   const [ticketId, setTicketId] = useState('');
   const [endUserName, setEndUserName] = useState('');
   const [managerName, setManagerName] = useState('');
@@ -135,6 +139,7 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
         assignmentReasonDetail: reasonDetail.trim() || undefined,
         notes: notes.trim() || undefined,
         peripherals,
+        unitId: unitId || undefined,
       });
       toast.success(`Atribuído a ${user}`);
       onConfirmed();
@@ -316,6 +321,8 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
               )}
             </div>
           )}
+
+          <UnitSelectField units={units} value={unitId} onChange={setUnitId} />
 
           {error && <p className="form-error">{error}</p>}
 

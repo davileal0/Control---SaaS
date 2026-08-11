@@ -3,6 +3,8 @@ import { api, AuditResult } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { STATUS_LABEL } from '../types/domain';
 import AssetLocation from '../components/AssetLocation';
+import UnitSelectField from '../components/UnitSelectField';
+import { useUnits } from '../lib/useUnits';
 import './peripherals-modal.css';
 import './audit.css'; // pill styles
 import './asset-modal.css';
@@ -28,6 +30,8 @@ type Destination = 'Disponivel' | 'Danificado';
 //  - Observações: obrigatórias QUANDO destino = Danificado (auditoria)
 export default function ReceiveModal({ asset, onClose, onConfirmed }: Props) {
   const toast = useToast();
+  const units = useUnits();
+  const [unitId, setUnitId] = useState(asset.currentUnit?.id ?? '');
   const [ticketId, setTicketId] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [trackingCode, setTrackingCode] = useState('');
@@ -80,6 +84,7 @@ export default function ReceiveModal({ asset, onClose, onConfirmed }: Props) {
         invoiceNumber: invoiceNumber.trim() || undefined,
         trackingCode: trackingCode.trim() || undefined,
         notes: notes.trim() || undefined,
+        unitId: unitId || undefined,
       });
       const destLabel = destination === 'Disponivel' ? 'Disponível' : 'Em assistência';
       toast.success(`Recebido. Status: ${destLabel}`);
@@ -209,6 +214,8 @@ export default function ReceiveModal({ asset, onClose, onConfirmed }: Props) {
               rows={3}
             />
           </label>
+
+          <UnitSelectField units={units} value={unitId} onChange={setUnitId} />
 
           {error && <p className="form-error">{error}</p>}
 

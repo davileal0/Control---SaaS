@@ -9,6 +9,8 @@ import { useToast } from '../contexts/ToastContext';
 import { AssignmentReason } from '../types/domain';
 import PeripheralDeliveryPicker from './PeripheralDeliveryPicker';
 import AssetLocation from '../components/AssetLocation';
+import UnitSelectField from '../components/UnitSelectField';
+import { useUnits } from '../lib/useUnits';
 import './peripherals-modal.css';
 import './audit.css';
 import './asset-modal.css';
@@ -32,6 +34,8 @@ interface Props {
 // formulário do novo embaixo.
 export default function ReassignModal({ asset, onClose, onConfirmed }: Props) {
   const toast = useToast();
+  const units = useUnits();
+  const [unitId, setUnitId] = useState(asset.currentUnit?.id ?? '');
   const [returnTicketId, setReturnTicketId] = useState('');
   const [newTicketId, setNewTicketId] = useState('');
   const [endUserName, setEndUserName] = useState('');
@@ -145,6 +149,7 @@ export default function ReassignModal({ asset, onClose, onConfirmed }: Props) {
         assignmentReasonDetail: reasonDetail.trim() || undefined,
         notes: notes.trim() || undefined,
         peripherals,
+        unitId: unitId || undefined,
       });
       toast.success(`Reaproveitado para ${user}`);
       onConfirmed();
@@ -388,6 +393,8 @@ export default function ReassignModal({ asset, onClose, onConfirmed }: Props) {
               )}
             </div>
           )}
+
+          <UnitSelectField units={units} value={unitId} onChange={setUnitId} />
 
           {error && <p className="form-error">{error}</p>}
 

@@ -54,6 +54,8 @@ export interface MovementLog {
   notes?: string | null;
   /** Preenchido apenas em logs de atribuição (transição → EmUso) */
   assignmentReason?: AssignmentReason | null;
+  /** Unidade registrada no momento do lançamento (snapshot) */
+  unitName?: string | null;
   isVoided: boolean;
   voidedAt?: string | null;
   timestamp: string;

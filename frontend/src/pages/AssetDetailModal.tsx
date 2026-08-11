@@ -312,6 +312,7 @@ export default function AssetDetailModal({
                         {log.invoiceNumber && ` · NF ${log.invoiceNumber}`}
                         {log.trackingCode && ` · Rastreio ${log.trackingCode}`}
                         {log.assignmentReason && ` · ${ASSIGNMENT_REASON_LABEL[log.assignmentReason]}`}
+                        {log.unitName && ` · 📍 ${log.unitName}`}
                       </div>
                       {log.notes && <p className="timeline__notes">{log.notes}</p>}
                       {log.corrections && log.corrections.length > 0 && (

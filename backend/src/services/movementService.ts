@@ -119,6 +119,32 @@ async function deliverPeripherals(
   return summary;
 }
 
+/**
+ * Resolve a unidade (localização) de uma movimentação. Se `unitId` foi
+ * informado, valida e usa; senão, mantém a unidade atual do ativo. Sempre
+ * devolve id + nome (o nome é carimbado no lançamento como snapshot de
+ * histórico). Lança se o `unitId` informado for inválido/inativo.
+ */
+async function resolveMovementUnit(
+  tx: Tx,
+  unitId: string | null | undefined,
+  currentUnitId: string | null,
+): Promise<{ id: string | null; name: string | null }> {
+  const targetId = unitId ?? currentUnitId ?? null;
+  if (!targetId) return { id: null, name: null };
+
+  const unit = await tx.unit.findUnique({
+    where: { id: targetId },
+    select: { id: true, name: true, isActive: true },
+  });
+  if (!unit) {
+    if (unitId) throw httpError('Unidade inválida.', 400);
+    return { id: null, name: null }; // unidade atual sumiu (raro): segue sem
+  }
+  if (unitId && !unit.isActive) throw httpError('Unidade inativa.', 400);
+  return { id: unit.id, name: unit.name };
+}
+
 /** Monta o texto do kit para anexar à observação do lançamento pai. */
 function formatKitSummary(summary: PeripheralDelivery[]): string {
   return (
@@ -158,7 +184,13 @@ export async function registerMovement(
       department: input.department,
     });
 
-    await tx.asset.update({ where: { serialNumber: serial }, data: { status: to } });
+    // Localização: usa a unidade informada (se houver) ou mantém a atual.
+    const loc = await resolveMovementUnit(tx, input.unitId, asset.currentUnitId);
+
+    await tx.asset.update({
+      where: { serialNumber: serial },
+      data: { status: to, currentUnitId: loc.id },
+    });
 
     // Kit de periféricos: só em atribuição (EmUso). Debita o estoque na
     // mesma transação — se faltar, tudo é revertido (incluindo o status).
@@ -192,6 +224,7 @@ export async function registerMovement(
         assignmentReason: to === 'EmUso' ? input.assignmentReason : null,
         assignmentReasonDetail:
           to === 'EmUso' ? input.assignmentReasonDetail || null : null,
+        unitName: loc.name,
         actorUserId: actor.id,
         actorName: actor.name,
         actorRole: actor.role,
@@ -314,12 +347,16 @@ export async function discardAsset(
       data: { isArchived: true },
     });
 
+    // Carimba a unidade onde o ativo estava no momento do descarte.
+    const loc = await resolveMovementUnit(tx, undefined, asset.currentUnitId);
+
     const log = await tx.movementLog.create({
       data: {
         assetSerialNumber: serial,
         originStatus: asset.status,
         destinationStatus: asset.status,
         notes: `[DESCARTE] ${input.notes}`,
+        unitName: loc.name,
         actorUserId: actor.id,
         actorName: actor.name,
         actorRole: actor.role,
@@ -399,6 +436,9 @@ export async function reassignAsset(
       lastAssignment?.endUserName ?? 'colaborador anterior';
     const extraNotes = input.notes ? `. ${input.notes}` : '';
 
+    // Localização: unidade informada (se houver) ou a atual do ativo.
+    const loc = await resolveMovementUnit(tx, input.unitId, asset.currentUnitId);
+
     // Log 1: devolução do anterior. O ativo é creditado de volta ao
     // colaborador anterior pra manter a referência da devolução clara.
     const returnLog = await tx.movementLog.create({
@@ -414,6 +454,7 @@ export async function reassignAsset(
           `[REUTILIZAÇÃO] Devolução de ${previousUserLabel} redirecionada ` +
           `para reaproveitamento — equipamento não retornou ao estoque ` +
           `físico${extraNotes}`,
+        unitName: loc.name,
         actorUserId: actor.id,
         actorName: actor.name,
         actorRole: actor.role,
@@ -453,11 +494,20 @@ export async function reassignAsset(
             `por ${previousUserLabel}${extraNotes}`,
           kitSummary,
         ),
+        unitName: loc.name,
         actorUserId: actor.id,
         actorName: actor.name,
         actorRole: actor.role,
       },
     });
+
+    // Atualiza a localização atual do ativo (se mudou de unidade).
+    if (loc.id !== asset.currentUnitId) {
+      await tx.asset.update({
+        where: { serialNumber: serial },
+        data: { currentUnitId: loc.id },
+      });
+    }
 
     // O asset.status continua EmUso (estado inicial == estado final).
     // Não há UPDATE necessário no asset — os logs registram a transição

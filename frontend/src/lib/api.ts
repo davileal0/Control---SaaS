@@ -140,6 +140,8 @@ export interface ReassignInput {
   notes?: string;
   /** Periféricos entregues junto (opcional) */
   peripherals?: PeripheralDelivery[];
+  /** Unidade de destino (opcional; atualiza a localização) */
+  unitId?: string;
 }
 
 // Sugestão de intenção para o autocomplete (detalhe + frequência).
@@ -247,6 +249,8 @@ export interface RegisterMovementInput {
   notes?: string;
   /** Periféricos entregues junto (só em atribuição, EmUso) */
   peripherals?: PeripheralDelivery[];
+  /** Unidade de destino (opcional; atualiza a localização) */
+  unitId?: string;
 }
 
 // ===== Painel de Atividade dos Operadores =====

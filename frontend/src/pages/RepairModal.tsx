@@ -3,6 +3,8 @@ import { api, AuditResult } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { STATUS_LABEL } from '../types/domain';
 import AssetLocation from '../components/AssetLocation';
+import UnitSelectField from '../components/UnitSelectField';
+import { useUnits } from '../lib/useUnits';
 import './peripherals-modal.css';
 import './audit.css';
 import './asset-modal.css';
@@ -24,6 +26,8 @@ interface Props {
 // vai entender o ciclo de vida completo da máquina.
 export default function RepairModal({ asset, onClose, onConfirmed }: Props) {
   const toast = useToast();
+  const units = useUnits();
+  const [unitId, setUnitId] = useState(asset.currentUnit?.id ?? '');
   const [repairNotes, setRepairNotes] = useState('');
   const [ticketId, setTicketId] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -57,6 +61,7 @@ export default function RepairModal({ asset, onClose, onConfirmed }: Props) {
         ticketId: ticketId.trim() || undefined,
         invoiceNumber: invoiceNumber.trim() || undefined,
         notes: descricao,
+        unitId: unitId || undefined,
       });
       toast.success('Equipamento volta ao estoque');
       onConfirmed();
@@ -165,6 +170,8 @@ export default function RepairModal({ asset, onClose, onConfirmed }: Props) {
               />
             </label>
           </div>
+
+          <UnitSelectField units={units} value={unitId} onChange={setUnitId} />
 
           {error && <p className="form-error">{error}</p>}
 

@@ -3,6 +3,8 @@ import { api, AuditResult } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { STATUS_LABEL } from '../types/domain';
 import AssetLocation from '../components/AssetLocation';
+import UnitSelectField from '../components/UnitSelectField';
+import { useUnits } from '../lib/useUnits';
 import './peripherals-modal.css';
 import './audit.css'; // pill styles
 import './asset-modal.css';
@@ -23,6 +25,8 @@ interface Props {
 // opcional.
 export default function DamageModal({ asset, onClose, onConfirmed }: Props) {
   const toast = useToast();
+  const units = useUnits();
+  const [unitId, setUnitId] = useState(asset.currentUnit?.id ?? '');
   const [defectNotes, setDefectNotes] = useState('');
   const [ticketId, setTicketId] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -67,6 +71,7 @@ export default function DamageModal({ asset, onClose, onConfirmed }: Props) {
         destinationStatus: 'Danificado',
         ticketId: ticketId.trim() || undefined,
         notes: motivo,
+        unitId: unitId || undefined,
       });
       toast.success('Movido para assistência');
       onConfirmed();
@@ -155,6 +160,8 @@ export default function DamageModal({ asset, onClose, onConfirmed }: Props) {
               autoComplete="off"
             />
           </label>
+
+          <UnitSelectField units={units} value={unitId} onChange={setUnitId} />
 
           {error && <p className="form-error">{error}</p>}
 

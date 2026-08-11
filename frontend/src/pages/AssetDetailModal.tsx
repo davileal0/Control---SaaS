@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, AuditResult } from '../lib/api';
-import { STATUS_LABEL, CATEGORY_LABEL, ROLE_LABEL, Role, ASSIGNMENT_REASON_LABEL } from '../types/domain';
-import AssetLocation from '../components/AssetLocation';
+import { STATUS_LABEL, ROLE_LABEL, Role, ASSIGNMENT_REASON_LABEL } from '../types/domain';
+import AssetHero from './AssetHero';
 import { canWrite } from '../lib/rbac';
 import AssignModal from './AssignModal';
 import ReceiveModal from './ReceiveModal';
@@ -230,34 +230,7 @@ export default function AssetDetailModal({
           <p style={{ padding: 8, color: 'var(--text-muted)' }}>Carregando…</p>
         ) : (
           <>
-            <header className="modal__head">
-              <div>
-                <span className="eyebrow">
-                  {CATEGORY_LABEL[data.category] ?? data.category}
-                </span>
-                <h2>{data.model}</h2>
-                <code className="audit-serial">{data.serialNumber}</code>
-                {data.imei && (
-                  <code
-                    className="audit-serial"
-                    style={{ display: 'block', marginTop: 4 }}
-                  >
-                    IMEI {data.imei}
-                  </code>
-                )}
-                <div style={{ marginTop: 8 }}>
-                  <AssetLocation unit={data.currentUnit} />
-                </div>
-              </div>
-              <div className="audit-state">
-                <span className={`pill pill--${data.status}`}>
-                  {STATUS_LABEL[data.status]}
-                </span>
-                {data.isArchived && (
-                  <span className="pill pill--archived">Arquivado</span>
-                )}
-              </div>
-            </header>
+            <AssetHero asset={data} onClose={onClose} />
 
             <section className="detail-section">
               <span className="eyebrow">Onde está agora</span>

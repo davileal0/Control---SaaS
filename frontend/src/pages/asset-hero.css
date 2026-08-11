@@ -1,0 +1,209 @@
+/* =====================================================================
+   Hero "cockpit" do modal de detalhe do ativo
+   Faixa escura sangrando até as bordas do modal, com ícone da categoria
+   em vidro + brilho neon (cor por categoria), título e chips. Anima ao
+   abrir. Sempre escuro (independe do tema) — é uma peça de destaque.
+   ===================================================================== */
+
+.asset-hero {
+  --hero-accent: #38c4ff;
+  --hero-accent-rgb: 56, 196, 255;
+
+  position: relative;
+  overflow: hidden;
+  margin: -28px -28px 24px;
+  padding: 22px 24px 20px;
+  border-radius: 16px 16px 0 0;
+  background:
+    linear-gradient(120deg, #0b1020 0%, #111a33 55%, #0c1a2e 100%);
+  color: #eaf1fb;
+  isolation: isolate;
+}
+
+/* Cor por categoria */
+.asset-hero--notebook   { --hero-accent: #38c4ff; --hero-accent-rgb: 56, 196, 255; }
+.asset-hero--celular    { --hero-accent: #a06bff; --hero-accent-rgb: 160, 107, 255; }
+.asset-hero--monitor    { --hero-accent: #2fd4c4; --hero-accent-rgb: 47, 212, 196; }
+.asset-hero--periferico { --hero-accent: #f0a53a; --hero-accent-rgb: 240, 165, 58; }
+
+/* Brilho radial na cor da categoria (canto superior direito) */
+.asset-hero__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(150px 150px at 84% -25%, rgba(var(--hero-accent-rgb), 0.4), transparent 70%),
+    radial-gradient(220px 180px at 12% 130%, rgba(var(--hero-accent-rgb), 0.14), transparent 70%);
+}
+
+/* Varredura de luz diagonal (shimmer) — anima uma vez ao abrir */
+.asset-hero__shine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40%;
+  width: 40%;
+  pointer-events: none;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.09),
+    transparent
+  );
+  transform: skewX(-14deg);
+  animation: heroShine 1200ms ease-out 120ms both;
+}
+
+@keyframes heroShine {
+  from { left: -45%; }
+  to   { left: 130%; }
+}
+
+.asset-hero__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #cdd8ee;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.asset-hero__close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.asset-hero__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Ícone da categoria em "vidro" com anel + brilho neon */
+.asset-hero__icon {
+  flex-shrink: 0;
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  color: var(--hero-accent);
+  background: rgba(var(--hero-accent-rgb), 0.12);
+  border: 1px solid rgba(var(--hero-accent-rgb), 0.5);
+  box-shadow:
+    0 0 24px rgba(var(--hero-accent-rgb), 0.4),
+    inset 0 0 14px rgba(var(--hero-accent-rgb), 0.25);
+  animation: heroIconPop 480ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes heroIconPop {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.asset-hero__text {
+  min-width: 0;
+}
+
+.asset-hero__eyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hero-accent);
+}
+
+.asset-hero__title {
+  margin: 3px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #f2f7ff;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asset-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.asset-hero__chip {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #b9c8e4;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px 9px;
+  border-radius: 6px;
+}
+
+/* Status + localização */
+.asset-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.asset-hero__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #eaf1fb;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 4px 11px;
+  border-radius: 999px;
+}
+.asset-hero__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8a93a6;
+}
+.asset-hero__status--Disponivel .asset-hero__dot { background: #3fd07a; box-shadow: 0 0 8px #3fd07a; }
+.asset-hero__status--EmUso .asset-hero__dot { background: #e5605d; box-shadow: 0 0 8px #e5605d; }
+.asset-hero__status--Danificado .asset-hero__dot { background: #e6b13f; box-shadow: 0 0 8px #e6b13f; }
+.asset-hero__status--arch { color: #b9c2d4; }
+
+.asset-hero__loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #cfe0ff;
+  background: rgba(var(--hero-accent-rgb), 0.14);
+  border: 1px solid rgba(var(--hero-accent-rgb), 0.35);
+  padding: 4px 11px;
+  border-radius: 999px;
+}
+.asset-hero__loc--none {
+  color: #97a2ba;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Respeita quem pediu menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  .asset-hero__shine { animation: none; display: none; }
+  .asset-hero__icon { animation: none; }
+}

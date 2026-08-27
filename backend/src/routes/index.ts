@@ -10,6 +10,7 @@ import metrics from './metrics.routes';
 import activity from './activity.routes';
 import inventory from './inventory.routes';
 import units from './units.routes';
+import acelerato from './acelerato.routes';
 
 const api = Router();
 
@@ -24,6 +25,7 @@ api.use('/metrics', metrics);
 api.use('/activity', activity);
 api.use('/inventory', inventory);
 api.use('/units', units);
+api.use('/acelerato', acelerato);
 
 export default api;
 

@@ -70,6 +70,24 @@ export const env = {
         issuer: `https://login.microsoftonline.com/${azureVars.tenantId}/v2.0`,
       }
     : null,
+
+  // Integração com o Acelerato (gestão de chamados). Opcional — se as 3
+  // variáveis não estiverem definidas, a integração fica desligada e o
+  // resto do sistema roda normalmente. Basic Auth: e-mail + token.
+  // O TOKEN é segredo — vive só aqui (lido do .env), nunca no código/front.
+  acelerato:
+    process.env.ACELERATO_BASE_URL &&
+    process.env.ACELERATO_EMAIL &&
+    process.env.ACELERATO_TOKEN
+      ? {
+          baseUrl: process.env.ACELERATO_BASE_URL.replace(/\/$/, ''),
+          email: process.env.ACELERATO_EMAIL,
+          token: process.env.ACELERATO_TOKEN,
+          // Caminho do endpoint de ticket; {id} é substituído pelo número.
+          // Ajuste conforme a doc (api.acelerato.com/#/) se necessário.
+          ticketPath: process.env.ACELERATO_TICKET_PATH ?? '/tickets/{id}',
+        }
+      : null,
 };
 
 export const isProd = env.nodeEnv === 'production';

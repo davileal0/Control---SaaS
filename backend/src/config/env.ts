@@ -83,9 +83,10 @@ export const env = {
           baseUrl: process.env.ACELERATO_BASE_URL.replace(/\/$/, ''),
           email: process.env.ACELERATO_EMAIL,
           token: process.env.ACELERATO_TOKEN,
-          // Caminho do endpoint de ticket; {id} é substituído pelo número.
-          // Ajuste conforme a doc (api.acelerato.com/#/) se necessário.
-          ticketPath: process.env.ACELERATO_TICKET_PATH ?? '/tickets/{id}',
+          // Caminho do endpoint de chamado; {id} = número do chamado
+          // (chamadoKey). Confirmado na doc: GET /api/publica/v2/chamados/{chamadoKey}.
+          ticketPath:
+            process.env.ACELERATO_TICKET_PATH ?? '/api/publica/v2/chamados/{id}',
         }
       : null,
 };

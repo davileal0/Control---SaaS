@@ -92,6 +92,38 @@ model Unit {
   @@map("units")
 }
 
+enum PendencyStatus {
+  PENDENTE
+  ENTREGUE
+  CANCELADA
+}
+
+// Pendência de periférico: item solicitado num chamado que NÃO foi
+// entregue na atribuição do ativo rastreável (por falta de estoque ou
+// por não ter sido marcado). Fica na fila até ser entregue (baixa no
+// estoque) ou cancelada.
+model PeripheralPendency {
+  id                Int            @id @default(autoincrement())
+  ticketId          String?        @map("ticket_id")
+  assetSerialNumber String?        @map("asset_serial_number")
+  peripheralType    String         @map("peripheral_type")
+  quantity          Int            @default(1)
+  motivo            String?        // "Sem estoque" | "Não marcado"
+  status            PendencyStatus @default(PENDENTE)
+  endUserName       String?        @map("end_user_name")
+  unitName          String?        @map("unit_name")
+
+  createdByUserId String?   @map("created_by_user_id")
+  createdByName   String?   @map("created_by_name")
+  createdByRole   Role?     @map("created_by_role")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  resolvedByName  String?   @map("resolved_by_name")
+  resolvedAt      DateTime? @map("resolved_at")
+
+  @@index([status, createdAt])
+  @@map("peripheral_pendencies")
+}
+
 model MovementLog {
   id                 Int          @id @default(autoincrement())
   assetSerialNumber  String       @map("asset_serial_number")

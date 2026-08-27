@@ -14,6 +14,7 @@ import {
   ActivityFeedItem,
   Role,
   Unit,
+  PeripheralPendency,
 } from '../types/domain';
 
 // Base da API. O token (Bearer) vem do fluxo de SSO; aqui só o anexamos.
@@ -269,6 +270,8 @@ export interface RegisterMovementInput {
   notes?: string;
   /** Periféricos entregues junto (só em atribuição, EmUso) */
   peripherals?: PeripheralDelivery[];
+  /** Pendências: solicitados no chamado mas não entregues agora */
+  pendencies?: { type: string; quantity: number; motivo?: string }[];
   /** Unidade de destino (opcional; atualiza a localização) */
   unitId?: string;
 }
@@ -355,6 +358,14 @@ export const api = {
     request<{ configured: boolean }>('/acelerato/status'),
   aceleratoTicket: (id: string) =>
     request<AceleratoTicket>(`/acelerato/tickets/${encodeURIComponent(id)}`),
+  listPendencies: (status?: string) =>
+    request<PeripheralPendency[]>(
+      `/pendencies${status ? `?status=${status}` : ''}`,
+    ),
+  resolvePendency: (id: number) =>
+    request<PeripheralPendency>(`/pendencies/${id}/resolve`, { method: 'POST' }),
+  cancelPendency: (id: number) =>
+    request<PeripheralPendency>(`/pendencies/${id}/cancel`, { method: 'POST' }),
   assignmentIntents: (reason?: 'AUMENTO_QUADRO' | 'SUBSTITUICAO') =>
     request<AssignmentIntentSuggestion[]>(
       `/assets/assignment-intents${reason ? `?reason=${reason}` : ''}`,

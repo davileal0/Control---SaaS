@@ -1,0 +1,88 @@
+/* Página de Pendências de periférico. */
+.pend-toolbar {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0 18px;
+}
+
+.pend-empty {
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.pend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pend-card {
+  padding: 14px 18px;
+}
+.pend-card--ENTREGUE,
+.pend-card--CANCELADA {
+  opacity: 0.68;
+}
+
+.pend-card__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pend-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pend-status {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.pend-status--PENDENTE {
+  color: #c88a1e;
+  background: color-mix(in srgb, #e0972a 14%, transparent);
+}
+.pend-status--ENTREGUE {
+  color: #2e8b57;
+  background: color-mix(in srgb, #2e8b57 14%, transparent);
+}
+.pend-status--CANCELADA {
+  color: var(--text-muted);
+  background: var(--bg-recess);
+}
+
+.pend-card__item {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.pend-card__meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.pend-card__ticket {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-blue, #4a82d6);
+  text-decoration: none;
+}
+.pend-card__ticket:hover { text-decoration: underline; }
+
+.pend-card__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}

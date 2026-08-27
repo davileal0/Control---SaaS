@@ -114,6 +114,13 @@ export const peripheralDeliveryItemSchema = z.object({
   quantity: z.number().int().positive().max(999),
 });
 
+// Pendência de periférico: item solicitado no chamado mas não entregue.
+export const pendencyItemSchema = z.object({
+  type: z.string().trim().min(1).max(120),
+  quantity: z.number().int().positive().max(999),
+  motivo: z.string().trim().max(80).optional(),
+});
+
 export const transitionSchema = z
   .object({
     destinationStatus: statusSchema,
@@ -131,6 +138,8 @@ export const transitionSchema = z
     assignmentReasonDetail: z.string().trim().max(120).optional(),
     // Periféricos entregues junto (opcional). Só faz sentido em EmUso.
     peripherals: z.array(peripheralDeliveryItemSchema).max(50).optional(),
+    // Pendências (solicitados no chamado mas não entregues agora).
+    pendencies: z.array(pendencyItemSchema).max(50).optional(),
     // Unidade física de destino (opcional; atualiza a localização).
     unitId: z.string().uuid('Unidade inválida.').optional(),
   })

@@ -8,6 +8,25 @@ export interface Unit {
   createdAt: string;
 }
 
+export type PendencyStatus = 'PENDENTE' | 'ENTREGUE' | 'CANCELADA';
+
+// Pendência de periférico (item de chamado não entregue na atribuição).
+export interface PeripheralPendency {
+  id: number;
+  ticketId: string | null;
+  assetSerialNumber: string | null;
+  peripheralType: string;
+  quantity: number;
+  motivo: string | null;
+  status: PendencyStatus;
+  endUserName: string | null;
+  unitName: string | null;
+  createdByName: string | null;
+  createdAt: string;
+  resolvedByName: string | null;
+  resolvedAt: string | null;
+}
+
 export type AssetStatus = 'Disponivel' | 'EmUso' | 'Danificado';
 
 export interface Asset {

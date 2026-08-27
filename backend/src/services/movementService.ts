@@ -207,6 +207,25 @@ export async function registerMovement(
       kitSummary = formatKitSummary(summary);
     }
 
+    // Pendências: periféricos solicitados no chamado mas não entregues
+    // agora (falta de estoque ou não marcados). Ficam na fila.
+    if (to === 'EmUso' && input.pendencies && input.pendencies.length > 0) {
+      await tx.peripheralPendency.createMany({
+        data: input.pendencies.map((p) => ({
+          ticketId: input.ticketId ?? null,
+          assetSerialNumber: serial,
+          peripheralType: p.type,
+          quantity: p.quantity,
+          motivo: p.motivo ?? null,
+          endUserName: input.endUserName ?? null,
+          unitName: loc.name,
+          createdByUserId: actor.id,
+          createdByName: actor.name,
+          createdByRole: actor.role,
+        })),
+      });
+    }
+
     return tx.movementLog.create({
       data: {
         assetSerialNumber: serial,

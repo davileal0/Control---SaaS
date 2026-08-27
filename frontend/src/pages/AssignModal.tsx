@@ -48,6 +48,8 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
     type: 'ok' | 'warn' | 'error';
     text: string;
   } | null>(null);
+  // Periféricos que o chamado pediu (pra calcular pendências no envio).
+  const [requestedFromTicket, setRequestedFromTicket] = useState<string[]>([]);
   const [ticketId, setTicketId] = useState('');
   const [endUserName, setEndUserName] = useState('');
   const [managerName, setManagerName] = useState('');
@@ -151,6 +153,7 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
       // Periféricos solicitados no chamado: marca os que há em estoque;
       // avisa (sem barrar) os que estão sem estoque.
       const solicitados = extrairPerifericosSolicitados(t);
+      setRequestedFromTicket(solicitados);
       const marcados: string[] = [];
       const semEstoque: string[] = [];
       if (solicitados.length) {
@@ -237,6 +240,24 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
       peripherals = items.length > 0 ? items : undefined;
     }
 
+    // Pendências: periféricos que o chamado pediu mas não vão junto agora
+    // (não marcados ou sem estoque). Ficam na fila de Pendências.
+    let pendencies:
+      | { type: string; quantity: number; motivo?: string }[]
+      | undefined;
+    if (requestedFromTicket.length) {
+      const stockMap = new Map(stock.map((s) => [s.type, s.available]));
+      const deliveredMap = deliverOn ? deliveries : {};
+      const list = requestedFromTicket
+        .filter((type) => !((deliveredMap[type] ?? 0) > 0))
+        .map((type) => ({
+          type,
+          quantity: 1,
+          motivo: (stockMap.get(type) ?? 0) > 0 ? 'Não marcado' : 'Sem estoque',
+        }));
+      pendencies = list.length > 0 ? list : undefined;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
@@ -250,6 +271,7 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
         assignmentReasonDetail: reasonDetail.trim() || undefined,
         notes: notes.trim() || undefined,
         peripherals,
+        pendencies,
         unitId: unitId || undefined,
       });
       toast.success(`Atribuído a ${user}`);

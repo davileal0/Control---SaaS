@@ -11,6 +11,7 @@ import activity from './activity.routes';
 import inventory from './inventory.routes';
 import units from './units.routes';
 import acelerato from './acelerato.routes';
+import pendencies from './pendencies.routes';
 
 const api = Router();
 
@@ -26,6 +27,7 @@ api.use('/activity', activity);
 api.use('/inventory', inventory);
 api.use('/units', units);
 api.use('/acelerato', acelerato);
+api.use('/pendencies', pendencies);
 
 export default api;
 

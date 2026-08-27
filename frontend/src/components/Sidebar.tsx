@@ -61,6 +61,14 @@ const NAV_ICONS: Record<string, JSX.Element> = {
       <path d="M2 3h2l2.4 12.3a1 1 0 0 0 1 .7h9.2a1 1 0 0 0 1-.8L21 7H5.5" />
     </NavGlyph>
   ),
+  movimentacoes: (
+    <NavGlyph>
+      <polyline points="17 3 21 7 17 11" />
+      <path d="M21 7H8a4 4 0 0 0-4 4v1" />
+      <polyline points="7 21 3 17 7 13" />
+      <path d="M3 17h13a4 4 0 0 0 4-4v-1" />
+    </NavGlyph>
+  ),
   audit: (
     <NavGlyph>
       <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />

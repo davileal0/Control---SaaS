@@ -15,6 +15,7 @@ import {
   Role,
   Unit,
   PeripheralPendency,
+  AssignmentMovement,
 } from '../types/domain';
 
 // Base da API. O token (Bearer) vem do fluxo de SSO; aqui só o anexamos.
@@ -453,6 +454,8 @@ export const api = {
     request<ActivityFeedItem[]>(`/metrics/activity-feed?limit=${limit}`),
   getTodayMovements: () =>
     request<ActivityFeedItem[]>('/metrics/movements-today'),
+  getAssignmentMovements: () =>
+    request<AssignmentMovement[]>('/metrics/assignments'),
   createUser: (input: CreateUserInput) =>
     request<User>('/users', {
       method: 'POST',

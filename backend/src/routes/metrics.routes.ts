@@ -8,6 +8,7 @@ import {
 import {
   getActivityFeed,
   getTodayMovements,
+  getAssignmentMovements,
 } from '../services/activityFeedService';
 
 const router = Router();
@@ -71,6 +72,15 @@ router.get('/activity-feed', anyAuthenticated, async (req, res, next) => {
 router.get('/movements-today', anyAuthenticated, async (_req, res, next) => {
   try {
     res.json(await getTodayMovements());
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Atribuições de ativos rastreáveis a chamados (página Movimentações).
+router.get('/assignments', anyAuthenticated, async (_req, res, next) => {
+  try {
+    res.json(await getAssignmentMovements());
   } catch (err) {
     next(err);
   }

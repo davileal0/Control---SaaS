@@ -64,10 +64,10 @@ function groupPendencies(items: PeripheralPendency[]): Group[] {
   });
 }
 
-// Página de Pendências: periféricos de chamados não entregues na
+// Painel de Pendências: periféricos de chamados não entregues na
 // atribuição. Um card por chamado, expansível; resolver dá baixa no
-// estoque no momento da entrega.
-export default function Pendencias({ role }: Props) {
+// estoque no momento da entrega. Usado como aba de "Movimentações".
+export default function PendenciasPanel({ role }: Props) {
   const toast = useToast();
   const [items, setItems] = useState<PeripheralPendency[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,14 +138,10 @@ export default function Pendencias({ role }: Props) {
 
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">Operação</span>
-        <h1>Pendências</h1>
-        <p>
-          Periféricos solicitados em chamados que ainda não foram entregues.
-          Ao resolver, a Control dá baixa no estoque no momento da entrega.
-        </p>
-      </div>
+      <p className="panel-intro">
+        Periféricos solicitados em chamados que ainda não foram entregues. Ao
+        resolver, a Control dá baixa no estoque no momento da entrega.
+      </p>
 
       <div className="pend-toolbar">
         <button

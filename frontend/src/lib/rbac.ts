@@ -52,7 +52,7 @@ export const NAV_ITEMS: NavItem[] = [
   // Visível pra TODOS — transparência operacional. Evita o "já abriram SC?"
   // no Teams: o operador N1 vê o status mesmo sem poder autorizar.
   { key: 'purchase-requests', label: 'Solicitações', group: 'operation', hint: 'Solicitações de compra e seu andamento', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
-  { key: 'pendencies', label: 'Pendências', group: 'operation', hint: 'Periféricos de chamados ainda não entregues', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
+  { key: 'movimentacoes', label: 'Movimentações', group: 'operation', hint: 'Atribuições de ativos a chamados e pendências de periférico', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
   { key: 'audit', label: 'Auditoria', group: 'analysis', hint: 'Trilha de movimentações e correções por ativo', roles: ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'] },
   // Painel de atividade dos operadores — apoio a feedback individual.
   // Gerencial: Líder e Coordenador (mesma faixa dos relatórios de leitura).

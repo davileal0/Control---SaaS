@@ -113,6 +113,50 @@ export async function getActivityFeed(limit = 6): Promise<ActivityFeedItem[]> {
   }));
 }
 
+// Atribuição de ativo rastreável a um chamado (pra página Movimentações).
+export type AssignmentMovement = {
+  id: number;
+  timestamp: string;
+  serialNumber: string;
+  model: string;
+  category: string;
+  endUserName: string | null;
+  unitName: string | null;
+  ticketId: string | null;
+};
+
+/**
+ * Lista as atribuições (→ EmUso) de ativos RASTREÁVEIS que têm chamado
+ * vinculado — ou seja, "qual ativo foi usado para qual chamado". Exclui
+ * periféricos e movimentações anuladas.
+ */
+export async function getAssignmentMovements(
+  limit = 100,
+): Promise<AssignmentMovement[]> {
+  const logs = await prisma.movementLog.findMany({
+    where: {
+      destinationStatus: 'EmUso',
+      isVoided: false,
+      ticketId: { not: null },
+      asset: { category: { in: ['Notebook', 'Desktop', 'Celular', 'AllInOne'] } },
+    },
+    orderBy: { timestamp: 'desc' },
+    take: limit,
+    include: { asset: { select: { model: true, category: true } } },
+  });
+
+  return logs.map((log: (typeof logs)[number]) => ({
+    id: log.id,
+    timestamp: log.timestamp.toISOString(),
+    serialNumber: log.assetSerialNumber,
+    model: log.asset.model,
+    category: log.asset.category,
+    endUserName: log.endUserName,
+    unitName: log.unitName,
+    ticketId: log.ticketId,
+  }));
+}
+
 /**
  * Movimentações de HOJE (a partir do início do dia). Usa exatamente o
  * mesmo filtro do KPI "Movimentações hoje" (exclui ingestão e descarte),

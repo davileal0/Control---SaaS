@@ -8,6 +8,18 @@ export interface Unit {
   createdAt: string;
 }
 
+// Atribuição de ativo rastreável a um chamado (página Movimentações).
+export interface AssignmentMovement {
+  id: number;
+  timestamp: string;
+  serialNumber: string;
+  model: string;
+  category: string;
+  endUserName: string | null;
+  unitName: string | null;
+  ticketId: string | null;
+}
+
 export type PendencyStatus = 'PENDENTE' | 'ENTREGUE' | 'CANCELADA';
 
 // Pendência de periférico (item de chamado não entregue na atribuição).

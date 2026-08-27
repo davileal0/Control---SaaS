@@ -22,7 +22,7 @@ import './components/loading.css';
 import './styles/global.css';
 import './app.css';
 import Inventario from './pages/Inventario';
-import Pendencias from './pages/Pendencias';
+import Movimentacoes from './pages/Movimentacoes';
 
 
 const ROLES: Role[] = ['OPERADOR_N1', 'LIDER_N1', 'DIRETOR_TI'];
@@ -227,7 +227,7 @@ function AppInner() {
         {current === 'discarded' && <Discarded />}
         {current === 'assets' && <Assets role={role} />}
         {current === 'purchase-requests' && <PurchaseRequests role={role} />}
-        {current === 'pendencies' && <Pendencias role={role} />}
+        {current === 'movimentacoes' && <Movimentacoes role={role} />}
         {current === 'settings' && <Settings />}
         {current === 'reports' && <Reports role={role} />}
         {current === 'activity' && <Activity />}

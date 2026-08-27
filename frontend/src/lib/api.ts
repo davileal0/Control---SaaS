@@ -144,6 +144,7 @@ export interface AceleratoTicket {
   atualizadoEm: string | null;
   arquivado: boolean;
   url: string | null;
+  camposPersonalizados: { nome: string; valor: string | null }[];
 }
 
 export interface ReassignInput {

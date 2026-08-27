@@ -36,6 +36,9 @@ export interface AceleratoTicketSummary {
   atualizadoEm: string | null;
   arquivado: boolean;
   url: string | null;
+  // Campos personalizados do chamado (variam por tipo). Usados na
+  // automação de preenchimento (colaborador, setor, líder, unidade).
+  camposPersonalizados: { nome: string; valor: string | null }[];
 }
 
 // Formato (parcial) do JSON do Acelerato — só os campos que consumimos.
@@ -54,6 +57,7 @@ interface RawTicket {
   dataDeCriacao?: string;
   dataDaUltimaAlteracao?: string;
   url?: string;
+  camposPersonalizadosTicket?: { nomeCampo?: string; valor?: string | null }[];
 }
 
 function normalizeTicket(raw: RawTicket): AceleratoTicketSummary {
@@ -74,6 +78,10 @@ function normalizeTicket(raw: RawTicket): AceleratoTicketSummary {
     atualizadoEm: raw.dataDaUltimaAlteracao ?? null,
     arquivado: Boolean(raw.arquivado),
     url: raw.url ?? null,
+    camposPersonalizados: (raw.camposPersonalizadosTicket ?? []).map((c) => ({
+      nome: c.nomeCampo ?? '',
+      valor: c.valor ?? null,
+    })),
   };
 }
 

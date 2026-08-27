@@ -17,6 +17,7 @@ import {
   extrairLiderEmail,
   extrairSetor,
   extrairUnidadeTexto,
+  extrairPerifericosSolicitados,
   isNovoEquipamento,
   matchUnit,
 } from '../lib/aceleratoFill';
@@ -147,17 +148,47 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
         pendentes.push('unidade');
       }
 
-      setScanMsg(
-        pendentes.length
-          ? {
-              type: 'warn',
-              text: `Chamado lido. Preenchi o que encontrei; confira/ajuste: ${pendentes.join(', ')}. Falta definir o motivo.`,
-            }
-          : {
-              type: 'ok',
-              text: 'Chamado lido e campos preenchidos ✓ — agora escolha o motivo da atribuição e confirme.',
-            },
-      );
+      // Periféricos solicitados no chamado: marca os que há em estoque;
+      // avisa (sem barrar) os que estão sem estoque.
+      const solicitados = extrairPerifericosSolicitados(t);
+      const marcados: string[] = [];
+      const semEstoque: string[] = [];
+      if (solicitados.length) {
+        const stockMap = new Map(stock.map((s) => [s.type, s.available]));
+        const novos: Record<string, number> = {};
+        for (const type of solicitados) {
+          if ((stockMap.get(type) ?? 0) > 0) {
+            novos[type] = 1;
+            marcados.push(type);
+          } else {
+            semEstoque.push(type);
+          }
+        }
+        if (marcados.length) {
+          setDeliverOn(true);
+          setDeliveries((prev) => ({ ...prev, ...novos }));
+        }
+      }
+
+      // Monta o feedback consolidado.
+      const partes: string[] = [];
+      if (marcados.length) {
+        partes.push(`Periféricos marcados: ${marcados.join(', ')}.`);
+      }
+      if (semEstoque.length) {
+        partes.push(
+          `⚠ Sem estoque agora (não serão entregues, mas ficam como pendência): ${semEstoque.join(', ')}.`,
+        );
+      }
+      if (pendentes.length) {
+        partes.push(`Confira/ajuste: ${pendentes.join(', ')}.`);
+      }
+      partes.push('Falta definir o motivo da atribuição.');
+
+      setScanMsg({
+        type: semEstoque.length || pendentes.length ? 'warn' : 'ok',
+        text: `Chamado lido. ${partes.join(' ')}`,
+      });
     } catch (err) {
       setScanMsg({
         type: 'error',

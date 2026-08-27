@@ -72,6 +72,51 @@ const UNIT_STOPWORDS = new Set([
   'UNIFIQUE',
 ]);
 
+// True se o valor do campo indica que o item FOI solicitado (não "Não").
+function isRequested(valor: string | null): boolean {
+  if (!valor) return false;
+  const v = norm(valor).trim();
+  return v !== '' && v !== 'NAO' && v !== '-' && v !== 'N/A' && v !== '0';
+}
+
+// Mapeia o nome do campo de periférico do chamado → tipo canônico da
+// Control (PERIPHERAL_TYPES). Ordem importa: específicos antes de genéricos.
+const PERIPH_RULES: { match: (n: string) => boolean; type: string }[] = [
+  { match: (n) => n.includes('HEADSET'), type: 'Headset' },
+  { match: (n) => n.includes('MOCHILA'), type: 'Mochila' },
+  { match: (n) => n.includes('MOUSE') && n.includes('PAD'), type: 'Mousepad' },
+  { match: (n) => n.includes('SUPORTE') && n.includes('NOTEBOOK'), type: 'Suporte p/ notebook' },
+  { match: (n) => n.includes('SUPORTE') && n.includes('VIDRO'), type: 'Suporte de vidro monitor' },
+  { match: (n) => n.includes('SUPORTE') && n.includes('ARTICULAD'), type: 'Suporte Monitor Articulado' },
+  { match: (n) => n.includes('TECLADO'), type: 'Teclado' },
+  { match: (n) => n.includes('WEBCAM') || n.includes('WEB CAM'), type: 'WebCam' },
+  { match: (n) => n.includes('MONITOR') && n.includes('EXTRA'), type: 'Monitor Extra' },
+  { match: (n) => n.includes('MONITOR') && !n.includes('SUPORTE'), type: 'Monitor' },
+  { match: (n) => n.includes('REGUA') || n.includes('FILTRO DE LINHA'), type: 'Régua de energia' },
+  // Mouse por último (evita casar "Mouse pad" como Mouse).
+  { match: (n) => n.includes('MOUSE'), type: 'Mouse' },
+];
+
+/**
+ * Extrai os tipos de periférico SOLICITADOS no chamado (os campos "Sim").
+ * Ignora o campo "Equipamento" (é o ativo rastreável, não periférico) e
+ * itens que não existem no catálogo da Control.
+ */
+export function extrairPerifericosSolicitados(t: AceleratoTicket): string[] {
+  const out = new Set<string>();
+  for (const campo of t.camposPersonalizados) {
+    if (!isRequested(campo.valor)) continue;
+    const n = norm(campo.nome);
+    for (const rule of PERIPH_RULES) {
+      if (rule.match(n)) {
+        out.add(rule.type);
+        break;
+      }
+    }
+  }
+  return [...out];
+}
+
 /**
  * Casa o texto de unidade do chamado (ex: "010054-UNIFIQUE - TAQUARI/SC")
  * com uma unidade da Control (ex: "CD - Taquari") por token significativo.

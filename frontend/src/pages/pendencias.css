@@ -1,4 +1,4 @@
-/* Página de Pendências de periférico. */
+/* Página de Pendências de periférico (agrupadas por chamado). */
 .pend-toolbar {
   display: flex;
   gap: 8px;
@@ -20,29 +20,112 @@
   gap: 10px;
 }
 
-.pend-card {
-  padding: 14px 18px;
-}
-.pend-card--ENTREGUE,
-.pend-card--CANCELADA {
-  opacity: 0.68;
+.pend-group {
+  padding: 0;
+  overflow: hidden;
 }
 
-.pend-card__main {
+/* Cabeçalho clicável do grupo (chamado) */
+.pend-group__head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'title caret'
+    'sub   caret';
+  gap: 2px 12px;
+  align-items: center;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.pend-group__title {
+  grid-area: title;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.pend-group__badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  color: #c88a1e;
+  background: color-mix(in srgb, #e0972a 14%, transparent);
+}
+.pend-group__sub {
+  grid-area: sub;
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pend-group__caret {
+  grid-area: caret;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Lista de periféricos dentro do grupo */
+.pend-items {
+  list-style: none;
+  margin: 0;
+  padding: 0 18px 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+.pend-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
 }
-
-.pend-card__info {
+.pend-item:last-of-type {
+  border-bottom: none;
+}
+.pend-item__info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
+.pend-item__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.pend-item__meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.pend-item__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
 
+.pend-items__foot {
+  padding-top: 10px;
+  font-size: 12px;
+}
+.pend-items__foot a {
+  color: var(--brand-blue, #4a82d6);
+  font-weight: 600;
+  text-decoration: none;
+}
+.pend-items__foot a:hover {
+  text-decoration: underline;
+}
+
+/* Badges de status */
 .pend-status {
   align-self: flex-start;
   font-size: 11px;
@@ -62,27 +145,4 @@
 .pend-status--CANCELADA {
   color: var(--text-muted);
   background: var(--bg-recess);
-}
-
-.pend-card__item {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.pend-card__meta {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-.pend-card__ticket {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--brand-blue, #4a82d6);
-  text-decoration: none;
-}
-.pend-card__ticket:hover { text-decoration: underline; }
-
-.pend-card__actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
 }

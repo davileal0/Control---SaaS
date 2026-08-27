@@ -59,6 +59,27 @@ export function isNovoEquipamento(t: AceleratoTicket): boolean {
   return norm(t.categoria ?? '').includes('NOVO EQUIPAMENTO');
 }
 
+/** True se a categoria do chamado é de "Transferência" (reaproveitamento). */
+export function isTransferencia(t: AceleratoTicket): boolean {
+  return norm(t.categoria ?? '').includes('TRANSFERENCIA');
+}
+
+/**
+ * True se o TIPO de transferência do chamado é compatível com a categoria
+ * do ativo: smartphone → Celular; notebook → Notebook/Desktop/AllInOne.
+ */
+export function transferenciaCompativel(
+  t: AceleratoTicket,
+  assetCategory: string,
+): boolean {
+  const cat = norm(t.categoria ?? '');
+  if (assetCategory === 'Celular') {
+    return cat.includes('SMARTPHONE') || cat.includes('CELULAR');
+  }
+  // Notebook / Desktop / AllInOne usam "Transferência de notebook".
+  return cat.includes('NOTEBOOK') || cat.includes('DESKTOP') || cat.includes('ALL');
+}
+
 // Palavras genéricas que não ajudam a identificar a unidade.
 const UNIT_STOPWORDS = new Set([
   'CD',

@@ -162,6 +162,8 @@ export interface ReassignInput {
   notes?: string;
   /** Periféricos entregues junto (opcional) */
   peripherals?: PeripheralDelivery[];
+  /** Pendências (solicitados no chamado mas não entregues agora) */
+  pendencies?: { type: string; quantity: number; motivo?: string }[];
   /** Unidade de destino (opcional; atualiza a localização) */
   unitId?: string;
 }

@@ -230,6 +230,8 @@ export const reassignSchema = z.object({
   notes: z.string().trim().max(2000).optional(),
   // Periféricos entregues junto do reaproveitamento (opcional).
   peripherals: z.array(peripheralDeliveryItemSchema).max(50).optional(),
+  // Pendências (solicitados no chamado mas não entregues agora).
+  pendencies: z.array(pendencyItemSchema).max(50).optional(),
   // Unidade física de destino (opcional; atualiza a localização).
   unitId: z.string().uuid('Unidade inválida.').optional(),
 });

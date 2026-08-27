@@ -11,6 +11,17 @@ import PeripheralDeliveryPicker from './PeripheralDeliveryPicker';
 import AssetLocation from '../components/AssetLocation';
 import UnitSelectField from '../components/UnitSelectField';
 import { useUnits } from '../lib/useUnits';
+import {
+  nameFromEmail,
+  extrairColaboradorEmail,
+  extrairLiderEmail,
+  extrairSetor,
+  extrairUnidadeTexto,
+  extrairPerifericosSolicitados,
+  isTransferencia,
+  transferenciaCompativel,
+  matchUnit,
+} from '../lib/aceleratoFill';
 import './peripherals-modal.css';
 import './audit.css';
 import './asset-modal.css';
@@ -36,6 +47,14 @@ export default function ReassignModal({ asset, onClose, onConfirmed }: Props) {
   const toast = useToast();
   const units = useUnits();
   const [unitId, setUnitId] = useState(asset.currentUnit?.id ?? '');
+  // Varredura do chamado de transferência no Acelerato (preenche os campos).
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState<{
+    type: 'ok' | 'warn' | 'error';
+    text: string;
+  } | null>(null);
+  // Periféricos que o chamado pediu (pra calcular pendências no envio).
+  const [requestedFromTicket, setRequestedFromTicket] = useState<string[]>([]);
   const [returnTicketId, setReturnTicketId] = useState('');
   const [newTicketId, setNewTicketId] = useState('');
   const [endUserName, setEndUserName] = useState('');
@@ -97,6 +116,118 @@ export default function ReassignModal({ asset, onClose, onConfirmed }: Props) {
       .catch(() => setIntents([]));
   }, [assignmentReason]);
 
+  // Varredura: lê o chamado de transferência no Acelerato e preenche os
+  // campos da nova atribuição. Mesma lógica da atribuição, mas valida a
+  // categoria "Transferência" e a compatibilidade com o tipo do ativo.
+  async function scanTicket() {
+    const num = newTicketId.trim();
+    if (!num) {
+      setScanMsg({ type: 'error', text: 'Digite o número do chamado primeiro.' });
+      return;
+    }
+    setScanning(true);
+    setScanMsg(null);
+    try {
+      const t = await api.aceleratoTicket(num);
+
+      // Validação 1: reaproveitamento exige chamado de Transferência.
+      if (!isTransferencia(t)) {
+        setScanMsg({
+          type: 'error',
+          text: `Chamado ${num} é da categoria "${t.categoria ?? '—'}", não de Transferência. O reaproveitamento exige um chamado de transferência de equipamento.`,
+        });
+        return;
+      }
+
+      // Validação 2: o tipo de transferência precisa casar com o ativo.
+      // "Transferência de smartphone" → Celular; "de notebook" → Notebook,
+      // Desktop e All-in-One.
+      if (!transferenciaCompativel(t, asset.category)) {
+        setScanMsg({
+          type: 'error',
+          text: `Chamado ${num} ("${t.categoria ?? '—'}") não é compatível com o ativo (${asset.category}). Use "Transferência de smartphone" para celular e "Transferência de notebook" para notebook, desktop ou all-in-one.`,
+        });
+        return;
+      }
+
+      const pendentes: string[] = [];
+
+      const colabEmail = extrairColaboradorEmail(t);
+      if (colabEmail) setEndUserName(nameFromEmail(colabEmail));
+      else pendentes.push('colaborador');
+
+      const liderEmail = extrairLiderEmail(t);
+      if (liderEmail) setManagerName(nameFromEmail(liderEmail));
+      else pendentes.push('líder');
+
+      const setor = extrairSetor(t);
+      if (setor) setDepartment(setor);
+      else pendentes.push('setor');
+
+      const unidadeTexto = extrairUnidadeTexto(t);
+      if (unidadeTexto) {
+        const u = matchUnit(unidadeTexto, units);
+        if (u && u !== 'ambiguous') setUnitId(u.id);
+        else pendentes.push(`unidade ("${unidadeTexto}" — selecione manualmente)`);
+      } else {
+        pendentes.push('unidade');
+      }
+
+      // Periféricos solicitados no chamado: marca os que há em estoque;
+      // avisa (sem barrar) os que estão sem estoque.
+      const solicitados = extrairPerifericosSolicitados(t);
+      setRequestedFromTicket(solicitados);
+      const marcados: string[] = [];
+      const semEstoque: string[] = [];
+      if (solicitados.length && canDeliverPeripherals) {
+        const stockMap = new Map(stock.map((s) => [s.type, s.available]));
+        const novos: Record<string, number> = {};
+        for (const type of solicitados) {
+          if ((stockMap.get(type) ?? 0) > 0) {
+            novos[type] = 1;
+            marcados.push(type);
+          } else {
+            semEstoque.push(type);
+          }
+        }
+        if (marcados.length) {
+          setDeliverOn(true);
+          setDeliveries((prev) => ({ ...prev, ...novos }));
+        }
+      }
+
+      // Feedback consolidado.
+      const partes: string[] = [];
+      if (marcados.length) {
+        partes.push(`Periféricos marcados: ${marcados.join(', ')}.`);
+      }
+      if (semEstoque.length) {
+        partes.push(
+          `⚠ Sem estoque agora (não serão entregues, mas ficam como pendência): ${semEstoque.join(', ')}.`,
+        );
+      }
+      if (pendentes.length) {
+        partes.push(`Confira/ajuste: ${pendentes.join(', ')}.`);
+      }
+      partes.push('Falta definir o motivo da nova atribuição.');
+
+      setScanMsg({
+        type: semEstoque.length || pendentes.length ? 'warn' : 'ok',
+        text: `Chamado lido. ${partes.join(' ')}`,
+      });
+    } catch (err) {
+      setScanMsg({
+        type: 'error',
+        text:
+          err instanceof Error
+            ? err.message
+            : 'Falha ao buscar o chamado no Acelerato.',
+      });
+    } finally {
+      setScanning(false);
+    }
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
@@ -136,6 +267,24 @@ export default function ReassignModal({ asset, onClose, onConfirmed }: Props) {
       peripherals = items.length > 0 ? items : undefined;
     }
 
+    // Pendências: periféricos que o chamado pediu mas não vão junto agora
+    // (não marcados ou sem estoque). Ficam na fila de Pendências.
+    let pendencies:
+      | { type: string; quantity: number; motivo?: string }[]
+      | undefined;
+    if (requestedFromTicket.length) {
+      const stockMap = new Map(stock.map((s) => [s.type, s.available]));
+      const deliveredMap = deliverOn ? deliveries : {};
+      const list = requestedFromTicket
+        .filter((type) => !((deliveredMap[type] ?? 0) > 0))
+        .map((type) => ({
+          type,
+          quantity: 1,
+          motivo: (stockMap.get(type) ?? 0) > 0 ? 'Não marcado' : 'Sem estoque',
+        }));
+      pendencies = list.length > 0 ? list : undefined;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
@@ -149,6 +298,7 @@ export default function ReassignModal({ asset, onClose, onConfirmed }: Props) {
         assignmentReasonDetail: reasonDetail.trim() || undefined,
         notes: notes.trim() || undefined,
         peripherals,
+        pendencies,
         unitId: unitId || undefined,
       });
       toast.success(`Reaproveitado para ${user}`);
@@ -305,14 +455,32 @@ export default function ReassignModal({ asset, onClose, onConfirmed }: Props) {
             </label>
             <label className="form-field">
               <span className="form-label">Chamado da nova atribuição</span>
-              <input
-                className="field"
-                value={newTicketId}
-                onChange={(e) => setNewTicketId(e.target.value)}
-                placeholder="ex.: 12346"
-                autoComplete="off"
-                required
-              />
+              <div className="ticket-scan">
+                <input
+                  className="field"
+                  value={newTicketId}
+                  onChange={(e) => {
+                    setNewTicketId(e.target.value);
+                    setScanMsg(null);
+                  }}
+                  placeholder="ex.: 358889 — transferência"
+                  autoComplete="off"
+                  required
+                />
+                <button
+                  type="button"
+                  className="btn accent ticket-scan__btn"
+                  onClick={scanTicket}
+                  disabled={scanning || !newTicketId.trim()}
+                >
+                  {scanning ? 'Buscando…' : '🔎 Buscar chamado'}
+                </button>
+              </div>
+              {scanMsg && (
+                <p className={`ticket-scan__msg ticket-scan__msg--${scanMsg.type}`}>
+                  {scanMsg.text}
+                </p>
+              )}
             </label>
           </div>
 

@@ -495,6 +495,26 @@ export async function reassignAsset(
       kitSummary = formatKitSummary(summary);
     }
 
+    // Pendências: periféricos solicitados no chamado de transferência mas
+    // não entregues agora (sem estoque ou não marcados). Ficam na fila,
+    // vinculadas ao chamado da nova atribuição.
+    if (input.pendencies && input.pendencies.length > 0) {
+      await tx.peripheralPendency.createMany({
+        data: input.pendencies.map((p) => ({
+          ticketId: input.newTicketId ?? null,
+          assetSerialNumber: serial,
+          peripheralType: p.type,
+          quantity: p.quantity,
+          motivo: p.motivo ?? null,
+          endUserName: input.endUserName ?? null,
+          unitName: loc.name,
+          createdByUserId: actor.id,
+          createdByName: actor.name,
+          createdByRole: actor.role,
+        })),
+      });
+    }
+
     // Log 2: nova atribuição. Mesmo ativo, novo colaborador.
     const newAssignmentLog = await tx.movementLog.create({
       data: {

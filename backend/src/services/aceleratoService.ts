@@ -16,7 +16,66 @@ function httpError(message: string, statusCode: number) {
 }
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
-const cache = new Map<string, { at: number; data: unknown }>();
+const cache = new Map<string, { at: number; data: AceleratoTicketSummary }>();
+
+// Resumo normalizado do chamado (o que a Control exibe). Desacopla a UI
+// do JSON gigante do Acelerato.
+export interface AceleratoTicketSummary {
+  key: number | null;
+  titulo: string;
+  status: string | null;
+  finalizado: boolean;
+  solicitante: string | null;
+  solicitanteEmail: string | null;
+  agente: string | null;
+  equipe: string | null;
+  categoria: string | null;
+  tipo: string | null;
+  prioridade: string | null;
+  criadoEm: string | null;
+  atualizadoEm: string | null;
+  arquivado: boolean;
+  url: string | null;
+}
+
+// Formato (parcial) do JSON do Acelerato — só os campos que consumimos.
+interface RawTicket {
+  ticketKey?: number;
+  titulo?: string;
+  arquivado?: boolean;
+  kanbanStatus?: { descricao?: string; fim?: boolean };
+  solicitantes?: { nome?: string; email?: string }[];
+  reporter?: { nome?: string; email?: string };
+  agente?: { nome?: string };
+  equipeDeAtendimento?: { nome?: string };
+  categoria?: { descricao?: string };
+  tipoDeTicket?: { descricao?: string };
+  tipoDePrioridade?: { descricao?: string };
+  dataDeCriacao?: string;
+  dataDaUltimaAlteracao?: string;
+  url?: string;
+}
+
+function normalizeTicket(raw: RawTicket): AceleratoTicketSummary {
+  const solicitante = raw.solicitantes?.[0] ?? raw.reporter;
+  return {
+    key: raw.ticketKey ?? null,
+    titulo: raw.titulo ?? '',
+    status: raw.kanbanStatus?.descricao ?? null,
+    finalizado: Boolean(raw.kanbanStatus?.fim),
+    solicitante: solicitante?.nome ?? null,
+    solicitanteEmail: solicitante?.email ?? null,
+    agente: raw.agente?.nome ?? null,
+    equipe: raw.equipeDeAtendimento?.nome ?? null,
+    categoria: raw.categoria?.descricao ?? null,
+    tipo: raw.tipoDeTicket?.descricao ?? null,
+    prioridade: raw.tipoDePrioridade?.descricao ?? null,
+    criadoEm: raw.dataDeCriacao ?? null,
+    atualizadoEm: raw.dataDaUltimaAlteracao ?? null,
+    arquivado: Boolean(raw.arquivado),
+    url: raw.url ?? null,
+  };
+}
 
 /** True se as 3 variáveis do Acelerato estão configuradas no .env. */
 export function isAceleratoConfigured(): boolean {
@@ -28,7 +87,9 @@ export function isAceleratoConfigured(): boolean {
  * cru da API (o mapeamento pros campos que a UI vai exibir é feito depois,
  * quando conhecermos o formato exato da resposta do seu Acelerato).
  */
-export async function getAceleratoTicket(ticketId: string): Promise<unknown> {
+export async function getAceleratoTicket(
+  ticketId: string,
+): Promise<AceleratoTicketSummary> {
   const cfg = env.acelerato;
   if (!cfg) {
     throw httpError(
@@ -68,7 +129,8 @@ export async function getAceleratoTicket(ticketId: string): Promise<unknown> {
     throw httpError(`Acelerato retornou erro ${res.status}.`, 502);
   }
 
-  const data = await res.json();
-  cache.set(ticketId, { at: Date.now(), data });
-  return data;
+  const data = (await res.json()) as RawTicket;
+  const summary = normalizeTicket(data);
+  cache.set(ticketId, { at: Date.now(), data: summary });
+  return summary;
 }

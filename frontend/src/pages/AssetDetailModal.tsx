@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, AuditResult } from '../lib/api';
 import { STATUS_LABEL, ROLE_LABEL, Role, ASSIGNMENT_REASON_LABEL } from '../types/domain';
 import AssetHero from './AssetHero';
+import TicketRef from '../components/TicketRef';
 import { canWrite } from '../lib/rbac';
 import AssignModal from './AssignModal';
 import ReceiveModal from './ReceiveModal';
@@ -279,7 +280,6 @@ export default function AssetDetailModal({
                       </div>
                       <div className="timeline__meta">
                         {new Date(log.timestamp).toLocaleString('pt-BR')}
-                        {log.ticketId && ` · Chamado ${log.ticketId}`}
                         {log.endUserName && ` · ${log.endUserName}`}
                         {log.department && ` · ${log.department}`}
                         {log.invoiceNumber && ` · NF ${log.invoiceNumber}`}
@@ -287,6 +287,7 @@ export default function AssetDetailModal({
                         {log.assignmentReason && ` · ${ASSIGNMENT_REASON_LABEL[log.assignmentReason]}`}
                         {log.unitName && ` · 📍 ${log.unitName}`}
                       </div>
+                      {log.ticketId && <TicketRef ticketId={log.ticketId} />}
                       {log.notes && <p className="timeline__notes">{log.notes}</p>}
                       {log.corrections && log.corrections.length > 0 && (
                         <ul className="corrections">

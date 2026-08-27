@@ -127,6 +127,25 @@ export interface PeripheralTypeStock {
   available: number;
 }
 
+// Resumo de um chamado do Acelerato (normalizado pelo backend).
+export interface AceleratoTicket {
+  key: number | null;
+  titulo: string;
+  status: string | null;
+  finalizado: boolean;
+  solicitante: string | null;
+  solicitanteEmail: string | null;
+  agente: string | null;
+  equipe: string | null;
+  categoria: string | null;
+  tipo: string | null;
+  prioridade: string | null;
+  criadoEm: string | null;
+  atualizadoEm: string | null;
+  arquivado: boolean;
+  url: string | null;
+}
+
 export interface ReassignInput {
   returnTicketId?: string;
   newTicketId: string;
@@ -331,6 +350,10 @@ export const api = {
     ),
   peripheralTypeStock: () =>
     request<PeripheralTypeStock[]>('/assets/peripherals/stock'),
+  aceleratoStatus: () =>
+    request<{ configured: boolean }>('/acelerato/status'),
+  aceleratoTicket: (id: string) =>
+    request<AceleratoTicket>(`/acelerato/tickets/${encodeURIComponent(id)}`),
   assignmentIntents: (reason?: 'AUMENTO_QUADRO' | 'SUBSTITUICAO') =>
     request<AssignmentIntentSuggestion[]>(
       `/assets/assignment-intents${reason ? `?reason=${reason}` : ''}`,

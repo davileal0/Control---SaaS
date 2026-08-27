@@ -11,6 +11,15 @@ import PeripheralDeliveryPicker from './PeripheralDeliveryPicker';
 import AssetLocation from '../components/AssetLocation';
 import UnitSelectField from '../components/UnitSelectField';
 import { useUnits } from '../lib/useUnits';
+import {
+  nameFromEmail,
+  extrairColaboradorEmail,
+  extrairLiderEmail,
+  extrairSetor,
+  extrairUnidadeTexto,
+  isNovoEquipamento,
+  matchUnit,
+} from '../lib/aceleratoFill';
 import './peripherals-modal.css';
 import './audit.css'; // pill styles
 import './asset-modal.css';
@@ -32,6 +41,12 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
   const toast = useToast();
   const units = useUnits();
   const [unitId, setUnitId] = useState(asset.currentUnit?.id ?? '');
+  // Varredura do chamado no Acelerato (preenchimento automático).
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState<{
+    type: 'ok' | 'warn' | 'error';
+    text: string;
+  } | null>(null);
   const [ticketId, setTicketId] = useState('');
   const [endUserName, setEndUserName] = useState('');
   const [managerName, setManagerName] = useState('');
@@ -87,6 +102,71 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
       .then(setIntents)
       .catch(() => setIntents([]));
   }, [assignmentReason]);
+
+  // Varredura: lê o chamado no Acelerato e preenche os campos.
+  async function scanTicket() {
+    const num = ticketId.trim();
+    if (!num) {
+      setScanMsg({ type: 'error', text: 'Digite o número do chamado primeiro.' });
+      return;
+    }
+    setScanning(true);
+    setScanMsg(null);
+    try {
+      const t = await api.aceleratoTicket(num);
+
+      // Validação: atribuição exige chamado de Novo Equipamento.
+      if (!isNovoEquipamento(t)) {
+        setScanMsg({
+          type: 'error',
+          text: `Chamado ${num} é da categoria "${t.categoria ?? '—'}", não de Novo Equipamento. A atribuição a colaborador exige um chamado de novo equipamento.`,
+        });
+        return;
+      }
+
+      const pendentes: string[] = [];
+
+      const colabEmail = extrairColaboradorEmail(t);
+      if (colabEmail) setEndUserName(nameFromEmail(colabEmail));
+      else pendentes.push('colaborador');
+
+      const liderEmail = extrairLiderEmail(t);
+      if (liderEmail) setManagerName(nameFromEmail(liderEmail));
+      else pendentes.push('líder');
+
+      const setor = extrairSetor(t);
+      if (setor) setDepartment(setor);
+      else pendentes.push('setor');
+
+      const unidadeTexto = extrairUnidadeTexto(t);
+      if (unidadeTexto) {
+        const u = matchUnit(unidadeTexto, units);
+        if (u && u !== 'ambiguous') setUnitId(u.id);
+        else pendentes.push(`unidade ("${unidadeTexto}" — selecione manualmente)`);
+      } else {
+        pendentes.push('unidade');
+      }
+
+      setScanMsg(
+        pendentes.length
+          ? {
+              type: 'warn',
+              text: `Chamado lido. Preenchi o que encontrei; confira/ajuste: ${pendentes.join(', ')}. Falta definir o motivo.`,
+            }
+          : {
+              type: 'ok',
+              text: 'Chamado lido e campos preenchidos ✓ — agora escolha o motivo da atribuição e confirme.',
+            },
+      );
+    } catch (err) {
+      setScanMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Falha ao buscar o chamado no Acelerato.',
+      });
+    } finally {
+      setScanning(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -194,15 +274,33 @@ export default function AssignModal({ asset, onClose, onConfirmed }: Props) {
         <form onSubmit={handleSubmit} className="asset-form">
           <label className="form-field">
             <span className="form-label">Chamado (Acelerato)</span>
-            <input
-              ref={firstFieldRef}
-              className="field"
-              value={ticketId}
-              onChange={(e) => setTicketId(e.target.value)}
-              placeholder="ex.: 12345"
-              autoComplete="off"
-              required
-            />
+            <div className="ticket-scan">
+              <input
+                ref={firstFieldRef}
+                className="field"
+                value={ticketId}
+                onChange={(e) => {
+                  setTicketId(e.target.value);
+                  setScanMsg(null);
+                }}
+                placeholder="ex.: 307987"
+                autoComplete="off"
+                required
+              />
+              <button
+                type="button"
+                className="btn accent ticket-scan__btn"
+                onClick={scanTicket}
+                disabled={scanning || !ticketId.trim()}
+              >
+                {scanning ? 'Buscando…' : '🔎 Buscar chamado'}
+              </button>
+            </div>
+            {scanMsg && (
+              <p className={`ticket-scan__msg ticket-scan__msg--${scanMsg.type}`}>
+                {scanMsg.text}
+              </p>
+            )}
           </label>
 
           <div className="form-row">

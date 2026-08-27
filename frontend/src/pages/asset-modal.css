@@ -698,3 +698,12 @@ textarea.field {
 .mode-toggle-row .mode-toggle {
   flex: 1;
 }
+
+/* Varredura do chamado no Acelerato (preenchimento automático) */
+.ticket-scan { display: flex; gap: 8px; align-items: stretch; }
+.ticket-scan .field { flex: 1; min-width: 0; }
+.ticket-scan__btn { flex-shrink: 0; white-space: nowrap; }
+.ticket-scan__msg { margin: 6px 0 0; font-size: 12px; line-height: 1.5; }
+.ticket-scan__msg--ok { color: #2e8b57; }
+.ticket-scan__msg--warn { color: #c88a1e; }
+.ticket-scan__msg--error { color: var(--led); }

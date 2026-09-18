@@ -65,11 +65,6 @@ model Asset {
   // presente (Postgres permite múltiplos NULL num índice unique).
   imei         String?     @unique
 
-  // Observação livre do ativo. Usada, entre outras coisas, pela carga em
-  // massa do Uniit pra guardar contexto do host (hostname, responsável,
-  // SO, último logon) sem criar atribuição formal. Nullable.
-  observacao   String?
-
   // Unidade física atual do ativo (Timbó, Blumenau, Rio do Sul...).
   // Atualizada nas movimentações. Nullable: ativos antigos sem unidade.
   currentUnitId String? @map("current_unit_id")
